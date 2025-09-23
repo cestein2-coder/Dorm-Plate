@@ -52,9 +52,9 @@ const Features: React.FC = () => {
           {features.map((feature, index) => (
             <div 
               key={index}
-              className="bg-white p-6 rounded-xl border border-gray-100 hover:border-orange-200 hover:shadow-lg transition-all duration-300 group"
+              className="bg-white p-6 rounded-xl border border-gray-100 hover:border-red-200 hover:shadow-lg transition-all duration-300 group"
             >
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-3 rounded-lg inline-block mb-4 group-hover:shadow-lg transition-shadow">
+              <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-3 rounded-lg inline-block mb-4 group-hover:shadow-lg transition-shadow">
                 {feature.icon}
               </div>
               
@@ -70,23 +70,23 @@ const Features: React.FC = () => {
         </div>
 
         {/* Stats Section */}
-        <div className="mt-20 bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-8 text-white">
+        <div className="mt-20 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl p-8 text-white">
           <div className="grid md:grid-cols-4 gap-8 text-center">
             <div>
               <div className="text-4xl font-bold mb-2">25K+</div>
-              <div className="text-orange-100">Active Students</div>
+              <div className="text-red-100">Active Students</div>
             </div>
             <div>
               <div className="text-4xl font-bold mb-2">50+</div>
-              <div className="text-orange-100">Partner Campuses</div>
+              <div className="text-red-100">Partner Campuses</div>
             </div>
             <div>
               <div className="text-4xl font-bold mb-2">15min</div>
-              <div className="text-orange-100">Avg Delivery Time</div>
+              <div className="text-red-100">Avg Delivery Time</div>
             </div>
             <div>
               <div className="text-4xl font-bold mb-2">4.9⭐</div>
-              <div className="text-orange-100">Student Rating</div>
+              <div className="text-red-100">Student Rating</div>
             </div>
           </div>
         </div>

@@ -15,7 +15,7 @@ const Pricing: React.FC = () => {
         "Student discounts"
       ],
       buttonText: "Get Started",
-      buttonStyle: "border-2 border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-600"
+      buttonStyle: "border-2 border-gray-300 text-gray-700 hover:border-red-500 hover:text-red-600"
     },
     {
       name: "DormPlate Plus",
@@ -31,7 +31,7 @@ const Pricing: React.FC = () => {
         "Order scheduling"
       ],
       buttonText: "Start Free Trial",
-      buttonStyle: "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-xl transform hover:-translate-y-1",
+      buttonStyle: "bg-gradient-to-r from-red-500 to-red-600 text-white hover:shadow-xl transform hover:-translate-y-1",
       popular: true
     },
     {
@@ -49,7 +49,7 @@ const Pricing: React.FC = () => {
         "Early access to new restaurants"
       ],
       buttonText: "Start Free Trial",
-      buttonStyle: "border-2 border-gray-300 text-gray-700 hover:border-orange-500 hover:text-orange-600"
+      buttonStyle: "border-2 border-gray-300 text-gray-700 hover:border-red-500 hover:text-red-600"
     }
   ];
 
@@ -72,13 +72,13 @@ const Pricing: React.FC = () => {
               key={index}
               className={`bg-white rounded-2xl p-8 border-2 transition-all duration-300 hover:shadow-xl ${
                 plan.popular 
-                  ? 'border-orange-500 shadow-lg relative' 
-                  : 'border-gray-200 hover:border-orange-200'
+                  ? 'border-red-500 shadow-lg relative' 
+                  : 'border-gray-200 hover:border-red-200'
               }`}
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-1 rounded-full text-sm font-medium flex items-center">
+                  <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-1 rounded-full text-sm font-medium flex items-center">
                     <Star className="h-4 w-4 mr-1" />
                     Most Popular
                   </div>
