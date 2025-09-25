@@ -1,11 +1,25 @@
 import React, { useState } from 'react';
-import { Menu, X, Utensils } from 'lucide-react';
+import { Menu, X, Utensils, User, LogOut } from 'lucide-react';
+import { useAuth } from './auth/AuthProvider';
+import AuthModal from './auth/AuthModal';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const { user, profile, signOut } = useAuth();
 
+  const handleAuthClick = (mode: 'signin' | 'signup') => {
+    setAuthMode(mode);
+    setAuthModalOpen(true);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
   return (
-    <header className="bg-white/95 backdrop-blur-sm shadow-sm fixed w-full top-0 z-50">
+    <>
+      <header className="bg-white/95 backdrop-blur-sm shadow-sm fixed w-full top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -37,12 +51,38 @@ const Header: React.FC = () => {
 
           {/* CTA Button */}
           <div className="hidden md:flex items-center space-x-4">
-            <button className="text-gray-700 hover:text-red-600 transition-colors font-medium">
-              Sign In
-            </button>
-            <button className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all">
-              Get Started
-            </button>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <User className="h-5 w-5 text-gray-600" />
+                  <span className="text-gray-700 font-medium">
+                    {profile?.first_name || user.email}
+                  </span>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-1 text-gray-700 hover:text-red-600 transition-colors font-medium"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={() => handleAuthClick('signin')}
+                  className="text-gray-700 hover:text-red-600 transition-colors font-medium"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => handleAuthClick('signup')}
+                  className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+                >
+                  Get Started
+                </button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -74,18 +114,51 @@ const Header: React.FC = () => {
                 Contact
               </a>
               <div className="pt-4 border-t">
-                <button className="block w-full text-left text-gray-700 hover:text-red-600 transition-colors font-medium mb-3">
-                  Sign In
-                </button>
-                <button className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2 rounded-lg font-medium w-full">
-                  Get Started
-                </button>
+                {user ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2 text-gray-700">
+                      <User className="h-5 w-5" />
+                      <span className="font-medium">
+                        {profile?.first_name || user.email}
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleSignOut}
+                      className="flex items-center space-x-2 w-full text-left text-gray-700 hover:text-red-600 transition-colors font-medium"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleAuthClick('signin')}
+                      className="block w-full text-left text-gray-700 hover:text-red-600 transition-colors font-medium mb-3"
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      onClick={() => handleAuthClick('signup')}
+                      className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2 rounded-lg font-medium w-full"
+                    >
+                      Get Started
+                    </button>
+                  </>
+                )}
               </div>
             </nav>
           </div>
         )}
       </div>
-    </header>
+      </header>
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode={authMode}
+      />
+    </>
   );
 };
 

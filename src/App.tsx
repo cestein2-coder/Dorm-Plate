@@ -1,4 +1,5 @@
 import React from 'react';
+import { AuthProvider } from './components/auth/AuthProvider';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Features from './components/Features';
@@ -9,15 +10,17 @@ import Footer from './components/Footer';
 
 function App() {
   return (
-    <div className="min-h-screen bg-white">
-      <Header />
-      <Hero />
-      <Features />
-      <Pricing />
-      <Testimonials />
-      <CTA />
-      <Footer />
-    </div>
+    <AuthProvider>
+      <div className="min-h-screen bg-white">
+        <Header />
+        <Hero />
+        <Features />
+        <Pricing />
+        <Testimonials />
+        <CTA />
+        <Footer />
+      </div>
+    </AuthProvider>
   );
 }
 

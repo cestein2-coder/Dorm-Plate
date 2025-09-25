@@ -1,7 +1,10 @@
 import React from 'react';
 import { ArrowRight, Clock, DollarSign, MapPin } from 'lucide-react';
+import { useAuth } from './auth/AuthProvider';
 
 const Hero: React.FC = () => {
+  const { user } = useAuth();
+
   return (
     <section className="pt-20 pb-16 bg-gradient-to-br from-red-50 via-white to-pink-50 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -37,10 +40,20 @@ const Hero: React.FC = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className="bg-gradient-to-r from-red-500 to-red-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center justify-center group">
-                Order Now
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+              {user ? (
+                <button className="bg-gradient-to-r from-red-500 to-red-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center justify-center group">
+                  Order Now
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => window.scrollTo({ top: document.getElementById('pricing')?.offsetTop || 0, behavior: 'smooth' })}
+                  className="bg-gradient-to-r from-red-500 to-red-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center justify-center group"
+                >
+                  Get Started
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              )}
               
               <button className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-lg font-semibold text-lg hover:border-red-500 hover:text-red-600 transition-colors">
                 Join Waitlist
@@ -49,7 +62,7 @@ const Hero: React.FC = () => {
 
             {/* Social Proof */}
             <div className="mt-8 text-sm text-gray-500">
-              Join 25,000+ students already using DormPlate
+              {user ? 'Welcome back! Ready to order?' : 'Join 25,000+ students already using DormPlate'}
             </div>
           </div>
 
