@@ -83,12 +83,20 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
         }, 1000);
       }
     } catch (err: any) {
-      // Parse Supabase error messages
       let errorMessage = 'An error occurred';
       
-      if (err.message) {
+      // First check if there's a body property with stringified JSON
+      if (err.body && typeof err.body === 'string') {
         try {
-          // Try to parse JSON error message
+          const parsed = JSON.parse(err.body);
+          errorMessage = parsed.message || err.message;
+        } catch {
+          // If body parsing fails, fall back to err.message
+          errorMessage = err.message || errorMessage;
+        }
+      } else if (err.message) {
+        try {
+          // Try to parse JSON error message from err.message
           const parsed = JSON.parse(err.message);
           errorMessage = parsed.message || err.message;
         } catch {
