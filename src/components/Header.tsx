@@ -3,7 +3,11 @@ import { Menu, X, Utensils, User, LogOut } from 'lucide-react';
 import { useAuth } from './auth/AuthProvider';
 import AuthModal from './auth/AuthModal';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  onNavigateToApp?: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
@@ -53,6 +57,12 @@ const Header: React.FC = () => {
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
+                <button
+                  onClick={onNavigateToApp}
+                  className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+                >
+                  Open App
+                </button>
                 <div className="flex items-center space-x-2">
                   <User className="h-5 w-5 text-gray-600" />
                   <span className="text-gray-700 font-medium">

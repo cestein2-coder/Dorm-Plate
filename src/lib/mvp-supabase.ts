@@ -3,20 +3,14 @@ import type {
   StudentProfile, 
   Restaurant, 
   MenuItem, 
-  MenuCategory,
   Order, 
   OrderItem,
-  Campus,
-  CampusLocation,
-  Review,
   GroupOrder,
-  DeliveryTracking,
-  Notification,
-  SubscriptionPlan,
-  UserSubscription,
+  GroupOrderParticipant,
+  Review,
   WaitlistEntry,
-  Promotion
-} from './types';
+  OrderStatusUpdate
+} from './mvp-types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -27,9 +21,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Auth helper functions
+// ==============================================
+// AUTH HELPERS (existing functionality)
+// ==============================================
+
 export const authHelpers = {
-  // Sign up with email and password
   async signUp(email: string, password: string, userData: {
     first_name: string;
     last_name: string;
@@ -46,7 +42,6 @@ export const authHelpers = {
     return { data, error };
   },
 
-  // Sign in with email and password
   async signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -55,19 +50,16 @@ export const authHelpers = {
     return { data, error };
   },
 
-  // Sign out
   async signOut() {
     const { error } = await supabase.auth.signOut();
     return { error };
   },
 
-  // Get current user
   async getCurrentUser() {
     const { data: { user }, error } = await supabase.auth.getUser();
     return { user, error };
   },
 
-  // Get current user's profile
   async getCurrentProfile() {
     const { user, error: userError } = await this.getCurrentUser();
     if (userError || !user) return { profile: null, error: userError };
@@ -81,7 +73,6 @@ export const authHelpers = {
     return { profile, error };
   },
 
-  // Update user profile
   async updateProfile(updates: Partial<Omit<StudentProfile, 'id' | 'email' | 'created_at' | 'updated_at'>>) {
     const { user, error: userError } = await this.getCurrentUser();
     if (userError || !user) return { error: userError };
@@ -97,38 +88,51 @@ export const authHelpers = {
   }
 };
 
-// Restaurant helpers
+// ==============================================
+// WAITLIST HELPERS (Landing Page)
+// ==============================================
+
+export const waitlistHelpers = {
+  async addToWaitlist(email: string, university?: string, referralSource?: string) {
+    const { data, error } = await supabase
+      .from('waitlist_entries')
+      .insert({
+        email,
+        university,
+        referral_source: referralSource
+      })
+      .select()
+      .single();
+
+    return { data, error };
+  },
+
+  async getWaitlistStatus(email: string) {
+    const { data, error } = await supabase
+      .from('waitlist_entries')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    return { data, error };
+  }
+};
+
+// ==============================================
+// FEATURE 1: BROWSE RESTAURANTS & MENUS
+// ==============================================
+
 export const restaurantHelpers = {
-  // Get restaurants by campus
-  async getRestaurantsByCampus(campusId: string) {
+  async getAllRestaurants() {
     const { data, error } = await supabase
-      .from('restaurant_campus_coverage')
-      .select(`
-        *,
-        restaurants (*)
-      `)
-      .eq('campus_id', campusId)
-      .eq('is_active', true);
+      .from('restaurants')
+      .select('*')
+      .eq('is_accepting_orders', true)
+      .order('rating', { ascending: false });
 
     return { data, error };
   },
 
-  // Get restaurant menu
-  async getRestaurantMenu(restaurantId: string) {
-    const { data, error } = await supabase
-      .from('menu_categories')
-      .select(`
-        *,
-        menu_items (*)
-      `)
-      .eq('restaurant_id', restaurantId)
-      .eq('is_active', true)
-      .order('display_order');
-
-    return { data, error };
-  },
-
-  // Get restaurant details
   async getRestaurant(restaurantId: string) {
     const { data, error } = await supabase
       .from('restaurants')
@@ -137,28 +141,45 @@ export const restaurantHelpers = {
       .single();
 
     return { data, error };
+  },
+
+  async getRestaurantMenu(restaurantId: string) {
+    const { data, error } = await supabase
+      .from('menu_items')
+      .select('*')
+      .eq('restaurant_id', restaurantId)
+      .eq('is_available', true)
+      .order('category', { ascending: true });
+
+    return { data, error };
+  },
+
+  async searchRestaurants(query: string) {
+    const { data, error } = await supabase
+      .from('restaurants')
+      .select('*')
+      .or(`name.ilike.%${query}%,cuisine_type.ilike.%${query}%`)
+      .eq('is_accepting_orders', true)
+      .order('rating', { ascending: false });
+
+    return { data, error };
   }
 };
 
-// Order helpers
+// ==============================================
+// FEATURE 2: PLACE INDIVIDUAL ORDERS
+// ==============================================
+
 export const orderHelpers = {
-  // Create new order
   async createOrder(orderData: {
     restaurant_id: string;
-    campus_id: string;
-    delivery_location_id?: string;
     delivery_address: string;
     delivery_instructions?: string;
-    delivery_latitude?: number;
-    delivery_longitude?: number;
-    scheduled_delivery_at?: string;
     items: {
       menu_item_id: string;
       quantity: number;
       special_instructions?: string;
-      modifiers?: any[];
     }[];
-    promotion_code?: string;
   }) {
     const { user } = await authHelpers.getCurrentUser();
     if (!user) return { error: new Error('User not authenticated') };
@@ -168,7 +189,6 @@ export const orderHelpers = {
     const orderItems = [];
 
     for (const item of orderData.items) {
-      // Get menu item details
       const { data: menuItem } = await supabase
         .from('menu_items')
         .select('price')
@@ -183,17 +203,21 @@ export const orderHelpers = {
           quantity: item.quantity,
           unit_price: menuItem.price,
           total_price: itemTotal,
-          special_instructions: item.special_instructions,
-          modifiers: item.modifiers
+          special_instructions: item.special_instructions
         });
       }
     }
 
-    // Apply delivery fee (simplified - you'd want to get this from restaurant/campus settings)
-    const deliveryFee = 2.99;
-    const serviceFee = subtotal * 0.1; // 10% service fee
-    const tax = (subtotal + serviceFee) * 0.08; // 8% tax
-    const total = subtotal + deliveryFee + serviceFee + tax;
+    // Get restaurant delivery fee
+    const { data: restaurant } = await supabase
+      .from('restaurants')
+      .select('delivery_fee')
+      .eq('id', orderData.restaurant_id)
+      .single();
+
+    const deliveryFee = restaurant?.delivery_fee || 2.99;
+    const tax = subtotal * 0.08; // 8% tax
+    const total = subtotal + deliveryFee + tax;
 
     // Create order
     const { data: order, error: orderError } = await supabase
@@ -201,19 +225,14 @@ export const orderHelpers = {
       .insert({
         user_id: user.id,
         restaurant_id: orderData.restaurant_id,
-        campus_id: orderData.campus_id,
-        delivery_location_id: orderData.delivery_location_id,
         delivery_address: orderData.delivery_address,
         delivery_instructions: orderData.delivery_instructions,
-        delivery_latitude: orderData.delivery_latitude,
-        delivery_longitude: orderData.delivery_longitude,
-        scheduled_delivery_at: orderData.scheduled_delivery_at,
         subtotal,
         delivery_fee: deliveryFee,
-        service_fee: serviceFee,
         tax,
         total,
-        status: 'pending'
+        status: 'pending',
+        estimated_delivery_time: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutes from now
       })
       .select()
       .single();
@@ -236,47 +255,50 @@ export const orderHelpers = {
     return { data: { ...order, items }, error: null };
   },
 
-  // Get user orders
-  async getUserOrders(userId?: string, limit: number = 20) {
+  async getUserOrders(limit: number = 20) {
     const { user } = await authHelpers.getCurrentUser();
-    if (!user && !userId) return { error: new Error('User not authenticated') };
+    if (!user) return { error: new Error('User not authenticated') };
 
     const { data, error } = await supabase
       .from('orders')
       .select(`
         *,
         restaurant:restaurants (*),
-        campus:campuses (*),
-        delivery_location:campus_locations (*),
         items:order_items (
           *,
           menu_item:menu_items (*)
-        ),
-        delivery_tracking (*)
+        )
       `)
-      .eq('user_id', userId || user.id)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(limit);
 
     return { data, error };
   },
 
-  // Update order status
-  async updateOrderStatus(orderId: string, status: string) {
+  async getOrder(orderId: string) {
     const { data, error } = await supabase
       .from('orders')
-      .update({ status })
+      .select(`
+        *,
+        restaurant:restaurants (*),
+        items:order_items (
+          *,
+          menu_item:menu_items (*)
+        )
+      `)
       .eq('id', orderId)
-      .select()
       .single();
 
     return { data, error };
   }
 };
 
-// Group order helpers
+// ==============================================
+// FEATURE 3: GROUP ORDERING
+// ==============================================
+
 export const groupOrderHelpers = {
-  // Create group order
   async createGroupOrder(orderData: any, groupData: {
     group_name: string;
     max_participants?: number;
@@ -299,7 +321,7 @@ export const groupOrderHelpers = {
         order_id: order.id,
         group_name: groupData.group_name,
         organizer_user_id: user.id,
-        max_participants: groupData.max_participants,
+        max_participants: groupData.max_participants || 10,
         join_code: joinCode,
         expires_at: groupData.expires_at
       })
@@ -314,13 +336,13 @@ export const groupOrderHelpers = {
       .insert({
         group_order_id: groupOrder.id,
         user_id: user.id,
+        contribution_amount: order.total,
         payment_status: 'paid'
       });
 
     return { data: { ...groupOrder, order }, error: null };
   },
 
-  // Join group order
   async joinGroupOrder(joinCode: string) {
     const { user } = await authHelpers.getCurrentUser();
     if (!user) return { error: new Error('User not authenticated') };
@@ -358,20 +380,73 @@ export const groupOrderHelpers = {
       .single();
 
     return { data: participant, error: participantError };
+  },
+
+  async getGroupOrder(joinCode: string) {
+    const { data, error } = await supabase
+      .from('group_orders')
+      .select(`
+        *,
+        order:orders (*),
+        participants:group_order_participants (
+          *,
+          user_profile:student_profiles (*)
+        )
+      `)
+      .eq('join_code', joinCode)
+      .single();
+
+    return { data, error };
   }
 };
 
-// Review helpers
+// ==============================================
+// FEATURE 4: ORDER TRACKING
+// ==============================================
+
+export const trackingHelpers = {
+  async getOrderUpdates(orderId: string) {
+    const { data, error } = await supabase
+      .from('order_status_updates')
+      .select('*')
+      .eq('order_id', orderId)
+      .order('created_at', { ascending: true });
+
+    return { data, error };
+  },
+
+  async addOrderUpdate(orderId: string, status: string, message?: string, estimatedTime?: string) {
+    const { data, error } = await supabase
+      .from('order_status_updates')
+      .insert({
+        order_id: orderId,
+        status,
+        message,
+        estimated_time: estimatedTime
+      })
+      .select()
+      .single();
+
+    // Also update the main order status
+    await supabase
+      .from('orders')
+      .update({ status })
+      .eq('id', orderId);
+
+    return { data, error };
+  }
+};
+
+// ==============================================
+// FEATURE 5: RATE & REVIEW
+// ==============================================
+
 export const reviewHelpers = {
-  // Create review
   async createReview(reviewData: {
     restaurant_id: string;
     order_id?: string;
     rating: number;
-    title?: string;
     comment?: string;
-    food_quality_rating?: number;
-    delivery_speed_rating?: number;
   }) {
     const { user } = await authHelpers.getCurrentUser();
     if (!user) return { error: new Error('User not authenticated') };
@@ -388,103 +463,78 @@ export const reviewHelpers = {
     return { data, error };
   },
 
-  // Get restaurant reviews
   async getRestaurantReviews(restaurantId: string, limit: number = 20) {
     const { data, error } = await supabase
       .from('reviews')
       .select(`
         *,
-        user_profile:student_profiles (*)
+        user_profile:student_profiles (first_name, last_name, university)
       `)
       .eq('restaurant_id', restaurantId)
       .order('created_at', { ascending: false })
       .limit(limit);
 
     return { data, error };
-  }
-};
-
-// Campus helpers
-export const campusHelpers = {
-  // Get campuses
-  async getCampuses() {
-    const { data, error } = await supabase
-      .from('campuses')
-      .select('*')
-      .eq('is_active', true)
-      .order('name');
-
-    return { data, error };
   },
 
-  // Get campus locations
-  async getCampusLocations(campusId: string) {
-    const { data, error } = await supabase
-      .from('campus_locations')
-      .select('*')
-      .eq('campus_id', campusId)
-      .eq('is_active', true)
-      .order('name');
-
-    return { data, error };
-  }
-};
-
-// Waitlist helpers
-export const waitlistHelpers = {
-  // Add to waitlist
-  async addToWaitlist(email: string, university?: string, referralSource?: string) {
-    const { data, error } = await supabase
-      .from('waitlist_entries')
-      .insert({
-        email,
-        university,
-        referral_source: referralSource
-      })
-      .select()
-      .single();
-
-    return { data, error };
-  },
-
-  // Get waitlist status
-  async getWaitlistStatus(email: string) {
-    const { data, error } = await supabase
-      .from('waitlist_entries')
-      .select('*')
-      .eq('email', email)
-      .single();
-
-    return { data, error };
-  }
-};
-
-// Notification helpers
-export const notificationHelpers = {
-  // Get user notifications
-  async getUserNotifications(limit: number = 20) {
+  async getUserReviews() {
     const { user } = await authHelpers.getCurrentUser();
     if (!user) return { error: new Error('User not authenticated') };
 
     const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
+      .from('reviews')
+      .select(`
+        *,
+        restaurant:restaurants (name, image_url)
+      `)
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    return { data, error };
-  },
-
-  // Mark notification as read
-  async markAsRead(notificationId: string) {
-    const { data, error } = await supabase
-      .from('notifications')
-      .update({ is_read: true })
-      .eq('id', notificationId)
-      .select()
-      .single();
+      .order('created_at', { ascending: false });
 
     return { data, error };
   }
 };
+
+// ==============================================
+// DASHBOARD HELPERS
+// ==============================================
+
+export const dashboardHelpers = {
+  async getUserDashboard() {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('User not authenticated') };
+
+    // Get recent orders
+    const { data: recentOrders } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        restaurant:restaurants (name, image_url)
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    // Get order stats
+    const { data: orderStats } = await supabase
+      .from('orders')
+      .select('total')
+      .eq('user_id', user.id)
+      .eq('status', 'delivered');
+
+    const totalOrders = orderStats?.length || 0;
+    const totalSpent = orderStats?.reduce((sum, order) => sum + order.total, 0) || 0;
+
+    return {
+      data: {
+        recent_orders: recentOrders || [],
+        total_orders: totalOrders,
+        total_spent: totalSpent
+      },
+      error: null
+    };
+  }
+};
+
+
+
+

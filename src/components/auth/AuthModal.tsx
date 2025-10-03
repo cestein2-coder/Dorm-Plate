@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, GraduationCap, Building } from 'lucide-react';
-import { authHelpers } from '../../lib/supabase';
+import { authHelpers } from '../../lib/mvp-supabase';
 
 interface AuthModalProps {
   isOpen: boolean;

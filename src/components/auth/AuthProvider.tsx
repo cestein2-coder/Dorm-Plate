@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase, StudentProfile, authHelpers } from '../../lib/supabase';
+import { supabase, authHelpers } from '../../lib/mvp-supabase';
+import type { StudentProfile } from '../../lib/mvp-types';
 
 interface AuthContextType {
   user: User | null;
