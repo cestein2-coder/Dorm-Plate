@@ -6,7 +6,6 @@ import RestaurantCarousel from './components/RestaurantCarousel';
 import StatsCounter from './components/StatsCounter';
 import LiveOrderTracking from './components/LiveOrderTracking';
 import DeliveryMap from './components/DeliveryMap';
-import PinDeliveryLocation from './components/PinDeliveryLocation';
 import Features from './components/Features';
 import Pricing from './components/Pricing';
 import Testimonials from './components/Testimonials';
@@ -25,7 +24,6 @@ function App() {
         <StatsCounter />
         <LiveOrderTracking />
         <DeliveryMap />
-        <PinDeliveryLocation />
         <Features />
         <Pricing />
         <Testimonials />
