@@ -2,6 +2,7 @@ import React from 'react';
 import { AuthProvider } from './components/auth/AuthProvider';
 import Header from './components/Header';
 import Hero from './components/Hero';
+import UserSignupWaitlist from './components/UserSignupWaitlist';
 import RestaurantCarousel from './components/RestaurantCarousel';
 import StatsCounter from './components/StatsCounter';
 import LiveOrderTracking from './components/LiveOrderTracking';
@@ -21,6 +22,7 @@ function App() {
       <div className="min-h-screen bg-white">
         <Header />
         <Hero />
+        <UserSignupWaitlist />
         <RestaurantCarousel />
         <StatsCounter />
         <LiveOrderTracking />
