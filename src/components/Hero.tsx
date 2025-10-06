@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowRight, Clock, DollarSign, MapPin } from 'lucide-react';
 import { useAuth } from './auth/AuthProvider';
+import WaitlistModal from './WaitlistModal';
 
 const Hero: React.FC = () => {
   const { user } = useAuth();
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
 
   return (
+    <>
     <section className="pt-20 pb-16 bg-gradient-to-br from-red-50 via-white to-pink-50 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -55,7 +58,9 @@ const Hero: React.FC = () => {
                 </button>
               )}
               
-              <button className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-lg font-semibold text-lg hover:border-red-500 hover:text-red-600 transition-colors">
+              <button
+                onClick={() => setWaitlistOpen(true)}
+                className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-lg font-semibold text-lg hover:border-red-500 hover:text-red-600 transition-colors">
                 Join Waitlist
               </button>
             </div>
@@ -120,6 +125,12 @@ const Hero: React.FC = () => {
         </div>
       </div>
     </section>
+
+    <WaitlistModal
+      isOpen={waitlistOpen}
+      onClose={() => setWaitlistOpen(false)}
+    />
+    </>
   );
 };
 
