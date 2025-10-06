@@ -22,12 +22,7 @@ function App() {
         <Header />
         <Hero />
         <div className="flex justify-center my-4">
-          <button
-            className="bg-food-brown text-white py-2 px-6 rounded hover:bg-food-yellow hover:text-food-brown transition text-lg font-bold shadow"
-            onClick={() => window.open('/waitlist', '_blank')}
-          >
-            Join Waitlist
-          </button>
+          {/* Join Waitlist button removed as requested */}
         </div>
         <RestaurantCarousel />
         <StatsCounter />
