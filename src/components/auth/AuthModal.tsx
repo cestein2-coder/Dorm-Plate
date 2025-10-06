@@ -83,7 +83,21 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
         }, 1000);
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      // Parse Supabase error messages
+      let errorMessage = 'An error occurred';
+      
+      if (err.message) {
+        try {
+          // Try to parse JSON error message
+          const parsed = JSON.parse(err.message);
+          errorMessage = parsed.message || err.message;
+        } catch {
+          // If not JSON, use the message as is
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -93,15 +107,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+  <div className="bg-food-cream rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-2xl font-bold text-food-brown">
             {mode === 'signin' ? 'Welcome Back' : 'Join DormPlate'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-food-brown/50 hover:text-food-orange transition-colors"
           >
             <X className="h-6 w-6" />
           </button>
@@ -111,7 +125,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-food-brown mb-2">
               Student Email (.edu required)
             </label>
             <div className="relative">
@@ -122,7 +136,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
                 value={formData.email}
                 onChange={handleInputChange}
                 placeholder="your.email@university.edu"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-food-orange focus:border-transparent"
                 required
               />
             </div>
@@ -133,7 +147,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-food-brown mb-2">
                     First Name
                   </label>
                   <div className="relative">
@@ -144,7 +158,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
                       value={formData.first_name}
                       onChange={handleInputChange}
                       placeholder="John"
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-food-orange focus:border-transparent"
                       required
                     />
                   </div>
@@ -159,14 +173,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
                     value={formData.last_name}
                     onChange={handleInputChange}
                     placeholder="Doe"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-food-orange focus:border-transparent"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-food-brown mb-2">
                   University
                 </label>
                 <div className="relative">
@@ -175,7 +189,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
                     name="university"
                     value={formData.university}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-food-orange focus:border-transparent"
                     required
                   >
                     <option value="">Select your university</option>
@@ -187,7 +201,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-food-brown mb-2">
                   Expected Graduation Year
                 </label>
                 <div className="relative">
@@ -196,7 +210,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
                     name="graduation_year"
                     value={formData.graduation_year}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-food-orange focus:border-transparent"
                   >
                     {Array.from({ length: 8 }, (_, i) => {
                       const year = new Date().getFullYear() + i;
@@ -210,7 +224,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-food-brown mb-2">
               Password
             </label>
             <div className="relative">
@@ -221,7 +235,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
                 value={formData.password}
                 onChange={handleInputChange}
                 placeholder="Enter your password"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-food-orange focus:border-transparent"
                 required
               />
             </div>
@@ -230,7 +244,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
           {/* Confirm Password (Sign Up) */}
           {mode === 'signup' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-food-brown mb-2">
                 Confirm Password
               </label>
               <div className="relative">
@@ -241,7 +255,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   placeholder="Confirm your password"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-food-orange focus:border-transparent"
                   required
                 />
               </div>
@@ -250,12 +264,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
 
           {/* Error/Success Messages */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="bg-food-orange/10 border border-food-orange text-food-orange px-4 py-3 rounded-lg">
               {error}
             </div>
           )}
           {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+            <div className="bg-food-green/10 border border-food-green text-food-green px-4 py-3 rounded-lg">
               {success}
             </div>
           )}
@@ -264,19 +278,19 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-food-orange to-food-green text-white py-3 rounded-lg font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Please wait...' : (mode === 'signin' ? 'Sign In' : 'Create Account')}
           </button>
 
           {/* Mode Toggle */}
           <div className="text-center pt-4 border-t">
-            <p className="text-gray-600">
+            <p className="text-food-brown">
               {mode === 'signin' ? "Don't have an account?" : "Already have an account?"}
               <button
                 type="button"
                 onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
-                className="ml-2 text-red-600 hover:text-red-700 font-medium"
+                className="ml-2 text-food-orange hover:text-food-green font-medium"
               >
                 {mode === 'signin' ? 'Sign Up' : 'Sign In'}
               </button>

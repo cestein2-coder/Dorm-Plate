@@ -43,6 +43,26 @@ export const authHelpers = {
         data: userData
       }
     });
+
+    // If user creation was successful, create the profile entry
+    if (data.user && !error) {
+      const { error: profileError } = await supabase
+        .from('student_profiles')
+        .insert({
+          id: data.user.id,
+          email: email,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          university: userData.university,
+          graduation_year: userData.graduation_year
+        });
+
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        return { data, error: profileError };
+      }
+    }
+
     return { data, error };
   },
 

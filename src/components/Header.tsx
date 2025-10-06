@@ -23,32 +23,32 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
   };
   return (
     <>
-      <header className="bg-white/95 backdrop-blur-sm shadow-sm fixed w-full top-0 z-50">
+  <header className="bg-food-cream/95 backdrop-blur-sm shadow-sm fixed w-full top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <div className="bg-gradient-to-r from-red-500 to-red-600 p-2 rounded-lg">
+            <div className="bg-gradient-to-r from-food-orange to-food-green p-2 rounded-lg">
               <Utensils className="h-6 w-6 text-white" />
             </div>
-            <span className="text-2xl font-bold text-gray-900">DormPlate</span>
+            <span className="text-2xl font-bold text-food-brown">DormPlate</span>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <a href="#top-meals" className="text-gray-700 hover:text-red-600 transition-colors font-medium">
-              Top Meals
+            <a href="#top-meals" className="text-food-brown hover:text-food-orange transition-colors font-medium">
+              Popular Meals
             </a>
-            <a href="#features" className="text-gray-700 hover:text-red-600 transition-colors font-medium">
+            <a href="#features" className="text-food-brown hover:text-food-orange transition-colors font-medium">
               Features
             </a>
-            <a href="#pricing" className="text-gray-700 hover:text-red-600 transition-colors font-medium">
+            <a href="#pricing" className="text-food-brown hover:text-food-orange transition-colors font-medium">
               Pricing
             </a>
-            <a href="#testimonials" className="text-gray-700 hover:text-red-600 transition-colors font-medium">
+            <a href="#testimonials" className="text-food-brown hover:text-food-orange transition-colors font-medium">
               Reviews
             </a>
-            <a href="#contact" className="text-gray-700 hover:text-red-600 transition-colors font-medium">
+            <a href="#contact" className="text-food-brown hover:text-food-orange transition-colors font-medium">
               Contact
             </a>
           </nav>
@@ -59,19 +59,19 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
               <div className="flex items-center space-x-4">
                 <button
                   onClick={onNavigateToApp}
-                  className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+                  className="bg-gradient-to-r from-food-orange to-food-green text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
                 >
                   Open App
                 </button>
                 <div className="flex items-center space-x-2">
-                  <User className="h-5 w-5 text-gray-600" />
-                  <span className="text-gray-700 font-medium">
+                  <User className="h-5 w-5 text-food-brown" />
+                  <span className="text-food-brown font-medium">
                     {profile?.first_name || user.email}
                   </span>
                 </div>
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-red-600 transition-colors font-medium"
+                  className="flex items-center space-x-1 text-food-brown hover:text-food-orange transition-colors font-medium"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Sign Out</span>
@@ -81,13 +81,13 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
               <>
                 <button
                   onClick={() => handleAuthClick('signin')}
-                  className="text-gray-700 hover:text-red-600 transition-colors font-medium"
+                  className="text-food-brown hover:text-food-orange transition-colors font-medium"
                 >
                   Sign In
                 </button>
                 <button
                   onClick={() => handleAuthClick('signup')}
-                  className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+                  className="bg-gradient-to-r from-food-orange to-food-green text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
                 >
                   Get Started
                 </button>
@@ -108,25 +108,25 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t">
             <nav className="flex flex-col space-y-4">
-              <a href="#top-meals" className="text-gray-700 hover:text-red-600 transition-colors font-medium">
-                Top Meals
+              <a href="#top-meals" className="text-food-brown hover:text-food-orange transition-colors font-medium">
+                Popular Meals
               </a>
-              <a href="#features" className="text-gray-700 hover:text-red-600 transition-colors font-medium">
+              <a href="#features" className="text-food-brown hover:text-food-orange transition-colors font-medium">
                 Features
               </a>
-              <a href="#pricing" className="text-gray-700 hover:text-red-600 transition-colors font-medium">
+              <a href="#pricing" className="text-food-brown hover:text-food-orange transition-colors font-medium">
                 Pricing
               </a>
-              <a href="#testimonials" className="text-gray-700 hover:text-red-600 transition-colors font-medium">
+              <a href="#testimonials" className="text-food-brown hover:text-food-orange transition-colors font-medium">
                 Reviews
               </a>
-              <a href="#contact" className="text-gray-700 hover:text-red-600 transition-colors font-medium">
+              <a href="#contact" className="text-food-brown hover:text-food-orange transition-colors font-medium">
                 Contact
               </a>
               <div className="pt-4 border-t">
                 {user ? (
                   <div className="space-y-3">
-                    <div className="flex items-center space-x-2 text-gray-700">
+                    <div className="flex items-center space-x-2 text-food-brown">
                       <User className="h-5 w-5" />
                       <span className="font-medium">
                         {profile?.first_name || user.email}
@@ -134,7 +134,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
                     </div>
                     <button
                       onClick={handleSignOut}
-                      className="flex items-center space-x-2 w-full text-left text-gray-700 hover:text-red-600 transition-colors font-medium"
+                      className="flex items-center space-x-2 w-full text-left text-food-brown hover:text-food-orange transition-colors font-medium"
                     >
                       <LogOut className="h-4 w-4" />
                       <span>Sign Out</span>
@@ -144,13 +144,13 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
                   <>
                     <button
                       onClick={() => handleAuthClick('signin')}
-                      className="block w-full text-left text-gray-700 hover:text-red-600 transition-colors font-medium mb-3"
+                      className="block w-full text-left text-food-brown hover:text-food-orange transition-colors font-medium mb-3"
                     >
                       Sign In
                     </button>
                     <button
                       onClick={() => handleAuthClick('signup')}
-                      className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2 rounded-lg font-medium w-full"
+                      className="bg-gradient-to-r from-food-orange to-food-green text-white px-6 py-2 rounded-lg font-medium w-full"
                     >
                       Get Started
                     </button>
