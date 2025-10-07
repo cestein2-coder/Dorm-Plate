@@ -56,19 +56,11 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
           {/* CTA Button */}
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={onNavigateToApp}
-                  className="bg-gradient-to-r from-food-orange to-food-green text-white px-4 py-2 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
-                >
-                  Open App
-                </button>
-                <div className="flex items-center space-x-2">
-                  <User className="h-5 w-5 text-food-brown" />
-                  <span className="text-food-brown font-medium">
-                    {profile?.first_name || user.email}
-                  </span>
-                </div>
+              <div className="flex items-center space-x-2">
+                <User className="h-5 w-5 text-food-brown" />
+                <span className="text-food-brown font-medium">
+                  {profile?.first_name || user.email}
+                </span>
                 <button
                   onClick={handleSignOut}
                   className="flex items-center space-x-1 text-food-brown hover:text-food-orange transition-colors font-medium"
