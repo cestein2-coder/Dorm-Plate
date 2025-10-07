@@ -36,7 +36,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <a href="/sustainable-meals" className="text-food-brown hover:text-food-orange transition-colors font-medium">
+            <a href="/sustainable-meals" className="text-food-brown hover:text-food-orange transition-colors font-medium" onClick={e => { e.preventDefault(); window.location.assign('/sustainable-meals'); }}>
               Popular Meals
             </a>
             <a href="#features" className="text-food-brown hover:text-food-orange transition-colors font-medium">
