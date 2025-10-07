@@ -36,7 +36,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <a href="#top-meals" className="text-food-brown hover:text-food-orange transition-colors font-medium">
+            <a href="/sustainable-meals" className="text-food-brown hover:text-food-orange transition-colors font-medium">
               Popular Meals
             </a>
             <a href="#features" className="text-food-brown hover:text-food-orange transition-colors font-medium">
