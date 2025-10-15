@@ -241,6 +241,38 @@ export interface OrderFilters {
   restaurant_id?: string;
 }
 
+// ==============================================
+// SMART KITCHEN / SUSTAINABILITY
+// ==============================================
+
+export interface AI_MealPlan extends BaseEntity {
+  user_id: string;
+  name: string;
+  input_items: Record<string, number> | string[] | any;
+  suggestions: any; // JSON with suggested recipes
+}
+
+export interface ExpirationItem extends BaseEntity {
+  user_id: string;
+  item_name: string;
+  quantity: number;
+  expires_at?: string;
+  notes?: string;
+}
+
+export interface SustainabilityInsight extends BaseEntity {
+  user_id: string;
+  metric: Record<string, any>;
+  source?: string;
+}
+
+export interface WasteLog extends BaseEntity {
+  user_id: string;
+  items: Record<string, number>;
+  estimated_cost: number;
+  logged_at?: string;
+}
+
 
 
 

@@ -535,6 +535,105 @@ export const dashboardHelpers = {
   }
 };
 
+// ==============================================
+// SMART KITCHEN HELPERS
+// ==============================================
+
+export const smartKitchenHelpers = {
+  async createMealPlan(name: string, inputItems: any, suggestions: any) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('User not authenticated') };
+
+    const { data, error } = await supabase
+      .from('ai_meal_plans')
+      .insert({ user_id: user.id, name, input_items: inputItems, suggestions })
+      .select()
+      .single();
+
+    return { data, error };
+  },
+
+  async getMealPlans(limit = 20) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('User not authenticated') };
+
+    const { data, error } = await supabase
+      .from('ai_meal_plans')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    return { data, error };
+  },
+
+  async addExpirationItem(item: { item_name: string; quantity?: number; expires_at?: string; notes?: string }) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('User not authenticated') };
+
+    const { data, error } = await supabase
+      .from('expiration_items')
+      .insert({ user_id: user.id, ...item })
+      .select()
+      .single();
+
+    return { data, error };
+  },
+
+  async getExpirationItems() {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('User not authenticated') };
+
+    const { data, error } = await supabase
+      .from('expiration_items')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('expires_at', { ascending: true });
+
+    return { data, error };
+  },
+
+  async addSustainabilityInsight(metric: any, source?: string) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('User not authenticated') };
+
+    const { data, error } = await supabase
+      .from('sustainability_insights')
+      .insert({ user_id: user.id, metric, source })
+      .select()
+      .single();
+
+    return { data, error };
+  },
+
+  async logWaste(items: Record<string, number>, estimatedCost: number) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('User not authenticated') };
+
+    const { data, error } = await supabase
+      .from('waste_logs')
+      .insert({ user_id: user.id, items, estimated_cost: estimatedCost })
+      .select()
+      .single();
+
+    return { data, error };
+  },
+
+  async getWasteLogs(limit = 20) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('User not authenticated') };
+
+    const { data, error } = await supabase
+      .from('waste_logs')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('logged_at', { ascending: false })
+      .limit(limit);
+
+    return { data, error };
+  }
+};
+
 
 
 
