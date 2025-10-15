@@ -32,6 +32,9 @@ const FridgeWizard: React.FC = () => {
   const [fridgeItems, setFridgeItems] = useState<string[]>([]);
   const [selectedSuggestions, setSelectedSuggestions] = useState<Suggestion[]>([]);
   const [wasteItems, setWasteItems] = useState<Record<string, number>>({});
+  const [wasteLogs, setWasteLogs] = useState<Array<{ id: string; date: string; items: Record<string, number>; total: number }>>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [addItemText, setAddItemText] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
 
   const parsedItems = useMemo(() => {
@@ -82,6 +85,21 @@ const FridgeWizard: React.FC = () => {
     });
   };
 
+  const onAddItemManually = () => {
+    const item = addItemText.trim().toLowerCase();
+    if (!item) return;
+    if (!fridgeItems.includes(item)) setFridgeItems(prev => [...prev, item]);
+    setAddItemText('');
+  };
+
+  const logWasteNow = () => {
+    const total = estimateSavingsFromWaste(wasteItems);
+    const entry = { id: String(Date.now()), date: new Date().toISOString(), items: { ...wasteItems }, total };
+    setWasteLogs(prev => [entry, ...prev]);
+    // clear current tracked quantities after logging
+    setWasteItems({});
+  };
+
   const reset = () => {
     setStep(1);
     setRawInput('');
@@ -128,20 +146,29 @@ const FridgeWizard: React.FC = () => {
         <div>
           <div className="mb-3">
             <h4 className="font-semibold text-food-brown">Detected items</h4>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {fridgeItems.map(i => (
-                <span key={i} className="px-3 py-1 bg-food-cream text-food-brown rounded-full text-sm">{i}</span>
-              ))}
+            <div className="flex items-center gap-3 mt-2">
+              <div className="flex-1 flex flex-wrap gap-2">
+                {fridgeItems.map(i => (
+                  <span key={i} className="px-3 py-1 bg-food-cream text-food-brown rounded-full text-sm">{i}</span>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search produce..." className="px-2 py-1 border rounded" />
+              </div>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <input value={addItemText} onChange={e => setAddItemText(e.target.value)} placeholder="Add item (e.g. basil)" className="flex-1 px-3 py-2 border rounded" />
+              <button onClick={onAddItemManually} className="bg-food-brown text-white px-3 py-2 rounded">Add</button>
             </div>
           </div>
 
           <div className="mb-4">
             <h4 className="font-semibold text-food-brown mb-2">AI Meal Suggestions <Sparkles className="inline-block ml-2" /></h4>
-            {suggestions.length === 0 ? (
+            {suggestions.filter(s => !searchTerm || s.ingredients.join(' ').includes(searchTerm.toLowerCase())).length === 0 ? (
               <p className="text-food-brown/70">No suggestions available — add more items.</p>
             ) : (
               <div className="grid gap-3">
-                {suggestions.map(s => (
+                {suggestions.filter(s => !searchTerm || s.ingredients.join(' ').includes(searchTerm.toLowerCase())).map(s => (
                   <div key={s.title} className="p-3 border rounded flex justify-between items-center">
                     <div>
                       <div className="font-semibold text-food-brown">{s.title}</div>
@@ -187,10 +214,29 @@ const FridgeWizard: React.FC = () => {
             ))}
           </div>
 
-          <div className="flex justify-end gap-2">
-            <button onClick={() => setStep(2)} className="text-food-brown underline">Back</button>
-            <button onClick={() => setStep(4)} className="bg-food-brown text-white px-4 py-2 rounded">View Savings</button>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <button onClick={() => setStep(2)} className="text-food-brown underline mr-3">Back</button>
+              <button onClick={() => setStep(4)} className="bg-food-brown text-white px-4 py-2 rounded">View Savings</button>
+            </div>
+            <div>
+              <button onClick={logWasteNow} className="bg-food-orange text-white px-4 py-2 rounded">Log Waste</button>
+            </div>
           </div>
+          {wasteLogs.length > 0 && (
+            <div className="mt-4">
+              <h5 className="font-semibold text-food-brown mb-2">Waste Log</h5>
+              <ul className="space-y-2">
+                {wasteLogs.map(log => (
+                  <li key={log.id} className="p-2 border rounded bg-food-cream">
+                    <div className="text-sm text-food-brown/70">{new Date(log.date).toLocaleString()}</div>
+                    <div className="text-food-brown">Total estimated cost: ${log.total.toFixed(2)}</div>
+                    <div className="text-sm text-food-brown/70 mt-1">{Object.entries(log.items).map(([k,v]) => `${k}: ${v}`).join(' — ')}</div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 
@@ -211,6 +257,20 @@ const FridgeWizard: React.FC = () => {
               <div className="text-2xl font-bold text-food-green">${savings.total.toFixed(2)}</div>
             </div>
           </div>
+
+          {wasteLogs.length > 0 && (
+            <div className="mb-4">
+              <h5 className="font-semibold text-food-brown">Savings History</h5>
+              <ul className="divide-y mt-2">
+                {wasteLogs.map(log => (
+                  <li key={log.id} className="py-2 flex justify-between">
+                    <div className="text-food-brown/70">{new Date(log.date).toLocaleDateString()} — {Object.entries(log.items).slice(0,3).map(([k,v]) => `${k}(${v})`).join(', ')}</div>
+                    <div className="font-semibold text-food-brown">${log.total.toFixed(2)}</div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="mb-4">
             <h5 className="font-semibold text-food-brown">Actionable Tips</h5>
