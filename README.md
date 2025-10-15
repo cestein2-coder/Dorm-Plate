@@ -101,6 +101,18 @@ The MVP includes these core tables:
 5. **Open your browser**
    Navigate to `http://localhost:5173`
 
+## Supabase Quick Test
+
+If you want to verify your Supabase connection locally, copy `.env.example` to `.env.local` and fill in the values. Then run the lightweight test script which attempts to connect and read a public table.
+
+```bash
+cp .env.example .env.local
+# edit .env.local and fill in values
+node --experimental-modules scripts/test-supabase.mjs
+```
+
+This script uses your anon key and will print basic session and sample rows (if `waitlist_entries` exists).
+
 ## 📱 Usage
 
 ### For Landing Page (Public Launch)
