@@ -20,6 +20,8 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
 
   const handleSignOut = async () => {
     await signOut();
+    setAuthMode('signin');
+    setAuthModalOpen(true);
   };
   return (
     <>
