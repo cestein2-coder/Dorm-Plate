@@ -1,0 +1,237 @@
+import React, { useMemo, useState } from 'react';
+import { Search, Sparkles, Trash2, BarChart2, RefreshCw } from 'lucide-react';
+
+type Suggestion = {
+  title: string;
+  ingredients: string[];
+  est_cost: number;
+};
+
+const KNOWN_RECIPES: Suggestion[] = [
+  { title: 'Veggie Omelette', ingredients: ['eggs', 'milk', 'cheese', 'spinach'], est_cost: 3.5 },
+  { title: 'Pasta Primavera', ingredients: ['pasta', 'tomato', 'zucchini', 'olive oil'], est_cost: 6.0 },
+  { title: 'Fried Rice', ingredients: ['rice', 'egg', 'carrot', 'peas', 'soy sauce'], est_cost: 4.0 },
+  { title: 'Grilled Cheese', ingredients: ['bread', 'cheese', 'butter'], est_cost: 2.5 },
+  { title: 'Chicken Bowl', ingredients: ['chicken', 'rice', 'lettuce', 'sauce'], est_cost: 7.5 },
+  { title: 'Salad Bowl', ingredients: ['lettuce', 'tomato', 'cucumber', 'olive oil'], est_cost: 5.0 },
+];
+
+const estimateSavingsFromWaste = (wasteItems: Record<string, number>) => {
+  // crude estimate: each wasted "unit" costs $2 on average
+  const unitCost = 2.0;
+  let total = 0;
+  for (const qty of Object.values(wasteItems)) {
+    total += qty * unitCost;
+  }
+  return Math.max(0, total);
+};
+
+const FridgeWizard: React.FC = () => {
+  const [step, setStep] = useState(1);
+  const [rawInput, setRawInput] = useState('');
+  const [fridgeItems, setFridgeItems] = useState<string[]>([]);
+  const [selectedSuggestions, setSelectedSuggestions] = useState<Suggestion[]>([]);
+  const [wasteItems, setWasteItems] = useState<Record<string, number>>({});
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const parsedItems = useMemo(() => {
+    const tokens = rawInput
+      .split(/[\n,;]+/)
+      .map(t => t.trim().toLowerCase())
+      .filter(Boolean);
+    return tokens;
+  }, [rawInput, refreshKey]);
+
+  const suggestions = useMemo(() => {
+    // simple matching: recipe matches if >= 1 ingredient in fridge
+    const found: Suggestion[] = [];
+    for (const r of KNOWN_RECIPES) {
+      const matchCount = r.ingredients.filter(i => parsedItems.includes(i)).length;
+      if (matchCount > 0) found.push({ ...r });
+    }
+    // if none found, fallback to suggest recipes based on the first item
+    if (found.length === 0 && parsedItems.length > 0) {
+      found.push({ title: `Quick ${parsedItems[0]} Stir`, ingredients: [parsedItems[0]], est_cost: 3.0 });
+      found.push({ title: `Simple ${parsedItems[0]} Salad`, ingredients: [parsedItems[0]], est_cost: 2.5 });
+    }
+    return found;
+  }, [parsedItems]);
+
+  const onAddFridge = () => {
+    const items = parsedItems;
+    if (items.length === 0) return;
+    setFridgeItems(items);
+    setStep(2);
+  };
+
+  const toggleSuggestion = (s: Suggestion) => {
+    const exists = selectedSuggestions.find(x => x.title === s.title);
+    if (exists) {
+      setSelectedSuggestions(selectedSuggestions.filter(x => x.title !== s.title));
+    } else {
+      setSelectedSuggestions([...selectedSuggestions, s]);
+    }
+  };
+
+  const setWasteQty = (item: string, qty: number) => {
+    setWasteItems(prev => {
+      const next = { ...prev };
+      if (qty <= 0) delete next[item];
+      else next[item] = qty;
+      return next;
+    });
+  };
+
+  const reset = () => {
+    setStep(1);
+    setRawInput('');
+    setFridgeItems([]);
+    setSelectedSuggestions([]);
+    setWasteItems({});
+    setRefreshKey(k => k + 1);
+  };
+
+  const savings = useMemo(() => {
+    const waste = estimateSavingsFromWaste(wasteItems);
+    const mealSavings = selectedSuggestions.reduce((s, r) => s + (r.est_cost * 0.2), 0); // assume 20% saved by using leftovers
+    return { waste, mealSavings, total: waste + mealSavings };
+  }, [wasteItems, selectedSuggestions]);
+
+  return (
+    <div className="bg-white rounded-lg shadow p-6 max-w-3xl mx-auto">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-food-brown">Smart Kitchen — Fridge → AI → Waste → Savings</h3>
+        <div className="flex items-center gap-2">
+          <button onClick={reset} className="text-sm text-food-brown/60 hover:text-food-brown inline-flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" /> Reset
+          </button>
+        </div>
+      </div>
+
+      {step === 1 && (
+        <div>
+          <p className="text-food-brown mb-3">Tell us what's in your fridge (one per line or comma separated). Be honest — the AI will make meal suggestions and estimate waste avoidance.</p>
+          <textarea
+            value={rawInput}
+            onChange={e => setRawInput(e.target.value)}
+            placeholder={"e.g. eggs, milk, bread, spinach, tomato"}
+            className="w-full border border-food-brown rounded p-3 h-28 focus:outline-none"
+          />
+          <div className="flex items-center gap-2 mt-3">
+            <button onClick={onAddFridge} className="bg-food-brown text-white px-4 py-2 rounded">Find Meals</button>
+            <button onClick={() => { setRawInput('eggs, milk, bread, spinach, tomato'); }} className="text-food-brown underline">Try sample</button>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div>
+          <div className="mb-3">
+            <h4 className="font-semibold text-food-brown">Detected items</h4>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {fridgeItems.map(i => (
+                <span key={i} className="px-3 py-1 bg-food-cream text-food-brown rounded-full text-sm">{i}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <h4 className="font-semibold text-food-brown mb-2">AI Meal Suggestions <Sparkles className="inline-block ml-2" /></h4>
+            {suggestions.length === 0 ? (
+              <p className="text-food-brown/70">No suggestions available — add more items.</p>
+            ) : (
+              <div className="grid gap-3">
+                {suggestions.map(s => (
+                  <div key={s.title} className="p-3 border rounded flex justify-between items-center">
+                    <div>
+                      <div className="font-semibold text-food-brown">{s.title}</div>
+                      <div className="text-sm text-food-brown/70">{s.ingredients.join(', ')}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm text-food-brown/70">Est ${s.est_cost.toFixed(2)}</div>
+                      <button onClick={() => toggleSuggestion(s)} className={`px-3 py-1 rounded ${selectedSuggestions.find(x=>x.title===s.title)? 'bg-food-brown text-white' : 'border text-food-brown'}`}>
+                        {selectedSuggestions.find(x=>x.title===s.title) ? 'Selected' : 'Use'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <button onClick={() => setStep(1)} className="text-food-brown underline">Back</button>
+            <button onClick={() => setStep(3)} className="bg-food-brown text-white px-4 py-2 rounded">Track Waste</button>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div>
+          <h4 className="font-semibold text-food-brown mb-2">Waste Tracking <Trash2 className="inline-block ml-2" /></h4>
+          <p className="text-food-brown/70 mb-3">Mark items you think you would normally throw away and estimate units (e.g., 1 loaf, 2 eggs).</p>
+          <div className="grid gap-2 mb-4">
+            {fridgeItems.map(item => (
+              <div key={item} className="flex items-center justify-between p-2 border rounded">
+                <div className="capitalize text-food-brown">{item}</div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    defaultValue={wasteItems[item] ?? 0}
+                    onChange={e => setWasteQty(item, Number(e.target.value))}
+                    className="w-20 p-1 border rounded"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <button onClick={() => setStep(2)} className="text-food-brown underline">Back</button>
+            <button onClick={() => setStep(4)} className="bg-food-brown text-white px-4 py-2 rounded">View Savings</button>
+          </div>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div>
+          <h4 className="font-semibold text-food-brown mb-2">Savings Dashboard <BarChart2 className="inline-block ml-2" /></h4>
+          <div className="grid md:grid-cols-3 gap-4 mb-4">
+            <div className="p-4 bg-food-cream rounded text-center">
+              <div className="text-sm text-food-brown/70">Estimated Waste Cost</div>
+              <div className="text-2xl font-bold text-food-brown">${savings.waste.toFixed(2)}</div>
+            </div>
+            <div className="p-4 bg-food-cream rounded text-center">
+              <div className="text-sm text-food-brown/70">Meal Savings (reuse leftovers)</div>
+              <div className="text-2xl font-bold text-food-brown">${savings.mealSavings.toFixed(2)}</div>
+            </div>
+            <div className="p-4 bg-food-cream rounded text-center">
+              <div className="text-sm text-food-brown/70">Total Estimated Savings</div>
+              <div className="text-2xl font-bold text-food-green">${savings.total.toFixed(2)}</div>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <h5 className="font-semibold text-food-brown">Actionable Tips</h5>
+            <ul className="list-disc pl-5 mt-2 text-food-brown/80">
+              <li>Schedule the selected recipes in the next 3 days to use leftovers.</li>
+              <li>Store leafy greens with paper towels to extend freshness.</li>
+              <li>Freeze bread if you won't finish within 2 days.</li>
+            </ul>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <div className="text-food-brown/70">Based on your input — this is a lightweight estimate for planning only.</div>
+            <div>
+              <button onClick={() => { setStep(2); }} className="text-food-brown underline mr-3">Adjust Meals</button>
+              <button onClick={reset} className="bg-food-brown text-white px-4 py-2 rounded">Done</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default FridgeWizard;

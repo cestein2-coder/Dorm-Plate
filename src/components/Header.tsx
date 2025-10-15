@@ -53,6 +53,9 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
             <a href="#contact" className="text-food-brown hover:text-food-orange transition-colors font-medium">
               Contact
             </a>
+            <a href="/smart-kitchen" className="text-food-brown hover:text-food-orange transition-colors font-medium" onClick={e => { e.preventDefault(); window.location.assign('/smart-kitchen'); }}>
+              Smart Kitchen
+            </a>
           </nav>
 
           {/* CTA Button */}
@@ -116,6 +119,9 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
               </a>
               <a href="#contact" className="text-food-brown hover:text-food-orange transition-colors font-medium">
                 Contact
+              </a>
+              <a href="/smart-kitchen" className="text-food-brown hover:text-food-orange transition-colors font-medium" onClick={e => { e.preventDefault(); window.location.assign('/smart-kitchen'); }}>
+                Smart Kitchen
               </a>
               <div className="pt-4 border-t">
                 {user ? (
