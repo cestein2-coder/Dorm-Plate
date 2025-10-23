@@ -2,11 +2,11 @@ import WaitlistForm from './WaitlistForm';
 
 export default function Hero() {
   return (
-    <section className="pt-32 pb-20 bg-gradient-to-br from-red-50 via-white to-pink-50">
+  <section className="pt-32 pb-20 bg-gradient-to-br from-orange-50 via-white to-green-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center space-y-8">
           <div className="space-y-4">
-            <h1 className="text-5xl lg:text-6xl font-bold bg-gradient-to-r from-red-500 to-pink-500 bg-clip-text text-transparent">
+            <h1 className="text-5xl lg:text-6xl font-bold bg-gradient-to-r from-orange-500 to-green-500 bg-clip-text text-transparent">
               Campus Food Delivery
               <br />
               Made Ridiculously Easy

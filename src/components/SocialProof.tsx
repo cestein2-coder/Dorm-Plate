@@ -55,17 +55,17 @@ export default function SocialProof() {
         <div className="mt-16 text-center">
           <div className="inline-flex items-center space-x-8 text-gray-600">
             <div className="text-center">
-              <div className="text-3xl font-bold text-red-500">10K+</div>
+              <div className="text-3xl font-bold text-orange-500">10K+</div>
               <div className="text-sm">Students Waiting</div>
             </div>
             <div className="h-12 w-px bg-gray-300"></div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-red-500">50+</div>
+              <div className="text-3xl font-bold text-orange-500">50+</div>
               <div className="text-sm">Universities</div>
             </div>
             <div className="h-12 w-px bg-gray-300"></div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-red-500">4.9</div>
+              <div className="text-3xl font-bold text-orange-500">4.9</div>
               <div className="text-sm">Beta Rating</div>
             </div>
           </div>

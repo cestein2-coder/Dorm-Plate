@@ -11,7 +11,7 @@ export default function Header() {
             </div>
             <span className="text-2xl font-bold text-food-brown">DormPlate</span>
           </div>
-          <button className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-lg hover:shadow-xl transform hover:-translate-y-1 transition-all">
+          <button className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-lg hover:shadow-xl transform hover:-translate-y-1 transition-all">
             Join Waitlist
           </button>
         </div>

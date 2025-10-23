@@ -39,12 +39,12 @@ export default function HowItWorks() {
           {steps.map((step, index) => (
             <div key={index} className="text-center space-y-4">
               <div className="flex justify-center">
-                <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-lg inline-block">
+                <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4 rounded-lg inline-block">
                   <step.icon className="h-8 w-8" />
                 </div>
               </div>
               <div className="space-y-2">
-                <div className="text-sm font-semibold text-red-500">Step {index + 1}</div>
+                  <div className="text-sm font-semibold text-orange-500">Step {index + 1}</div>
                 <h3 className="text-xl font-bold text-gray-900">{step.title}</h3>
                 <p className="text-gray-600">{step.description}</p>
               </div>

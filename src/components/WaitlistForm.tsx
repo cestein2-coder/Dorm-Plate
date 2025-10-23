@@ -69,14 +69,14 @@ export default function WaitlistForm({ variant = 'hero' }: WaitlistFormProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Your college email (.edu)"
-            className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-gray-500"
+            className="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-gray-500"
             disabled={loading || success}
             required
           />
           <button
             type="submit"
             disabled={loading || success}
-            className="px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold rounded-lg hover:shadow-xl transform hover:-translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center group"
+            className="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-lg hover:shadow-xl transform hover:-translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center group"
           >
             {loading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -95,11 +95,11 @@ export default function WaitlistForm({ variant = 'hero' }: WaitlistFormProps) {
           value={university}
           onChange={(e) => setUniversity(e.target.value)}
           placeholder="University name (optional)"
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-gray-500"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-gray-500"
           disabled={loading || success}
         />
         {error && (
-          <div className="bg-red-500/20 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+          <div className="bg-orange-50 border border-orange-300 text-orange-700 px-4 py-3 rounded-lg">
             {error}
           </div>
         )}
@@ -147,7 +147,7 @@ export default function WaitlistForm({ variant = 'hero' }: WaitlistFormProps) {
         disabled={loading || success}
       />
       {error && (
-        <div className="bg-red-500/20 border border-red-400 text-white px-4 py-3 rounded-lg">
+  <div className="bg-orange-50 border border-orange-300 text-orange-700 px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
