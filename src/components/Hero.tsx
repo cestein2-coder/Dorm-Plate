@@ -9,19 +9,19 @@ const Hero: React.FC = () => {
 
   return (
     <>
-    <section className="pt-20 pb-16 bg-gradient-to-br from-red-50 via-white to-pink-50 overflow-hidden">
+    <section className="pt-20 pb-16 bg-gradient-to-br from-orange-50 via-white to-green-50 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
           <div className="max-w-xl">
-            <div className="inline-flex items-center bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium mb-6">
+            <div className="inline-flex items-center bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium mb-6">
               <MapPin className="h-4 w-4 mr-2" />
               Now available on 50+ campuses
             </div>
             
             <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
               Smart Food Delivery for 
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-500"> College Students</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-food-orange to-food-green"> College Students</span>
             </h1>
             
             <p className="text-xl text-gray-600 mb-8 leading-relaxed">
@@ -32,7 +32,7 @@ const Hero: React.FC = () => {
             {/* Stats */}
             <div className="flex items-center space-x-6 mb-8">
               <div className="flex items-center space-x-2">
-                <Clock className="h-5 w-5 text-red-500" />
+                <Clock className="h-5 w-5 text-food-orange" />
                 <span className="text-gray-700 font-medium">15 min avg delivery</span>
               </div>
               <div className="flex items-center space-x-2">
@@ -44,14 +44,14 @@ const Hero: React.FC = () => {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               {user ? (
-                <button className="bg-gradient-to-r from-red-500 to-red-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center justify-center group">
+                <button className="bg-gradient-to-r from-food-orange to-food-orange-dark text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center justify-center group">
                   Order Now
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               ) : (
                 <button
                   onClick={() => window.scrollTo({ top: document.getElementById('pricing')?.offsetTop || 0, behavior: 'smooth' })}
-                  className="bg-gradient-to-r from-red-500 to-red-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center justify-center group"
+                  className="bg-gradient-to-r from-food-orange to-food-orange-dark text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center justify-center group"
                 >
                   Get Started
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -60,7 +60,7 @@ const Hero: React.FC = () => {
               
               <button
                 onClick={() => setWaitlistOpen(true)}
-                className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-lg font-semibold text-lg hover:border-red-500 hover:text-red-600 transition-colors">
+                className="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-lg font-semibold text-lg hover:border-food-orange hover:text-food-orange transition-colors">
                 Join Waitlist
               </button>
             </div>
@@ -104,7 +104,7 @@ const Hero: React.FC = () => {
                 
                 <div className="mt-4 text-center">
                   <div className="text-sm text-gray-500 mb-2">Estimated delivery</div>
-                  <div className="text-2xl font-bold text-red-600">12 mins</div>
+                  <div className="text-2xl font-bold text-food-brown">12 mins</div>
                 </div>
               </div>
 
@@ -113,7 +113,7 @@ const Hero: React.FC = () => {
                 <span className="text-2xl">🍕</span>
               </div>
               
-              <div className="absolute -bottom-4 -right-4 bg-red-400 rounded-full p-3 shadow-lg animate-bounce delay-1000">
+              <div className="absolute -bottom-4 -right-4 bg-food-orange rounded-full p-3 shadow-lg animate-bounce delay-1000">
                 <span className="text-2xl">🍔</span>
               </div>
               
