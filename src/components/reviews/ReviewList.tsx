@@ -103,11 +103,11 @@ const ReviewList: React.FC<ReviewListProps> = ({
     return (
       <div className="bg-white rounded-lg shadow-sm p-6">
         <div className="text-center">
-          <div className="text-red-500 mb-2">Error loading reviews</div>
+          <div className="text-food-orange mb-2">Error loading reviews</div>
           <p className="text-gray-600 text-sm mb-4">{error}</p>
           <button 
             onClick={loadReviews}
-            className="text-red-500 hover:text-red-600 font-medium text-sm"
+            className="text-food-orange hover:text-food-orange-dark font-medium text-sm"
           >
             Try Again
           </button>
@@ -130,7 +130,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
           {showAddReview && onAddReview && (
             <button
               onClick={onAddReview}
-              className="bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center"
+              className="bg-food-orange text-white px-4 py-2 rounded-lg font-medium hover:bg-food-orange-dark transition-colors flex items-center"
             >
               <MessageCircle className="h-4 w-4 mr-2" />
               Write Review
@@ -188,7 +188,7 @@ const ReviewList: React.FC<ReviewListProps> = ({
             {showAddReview && onAddReview && (
               <button
                 onClick={onAddReview}
-                className="bg-red-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors"
+                className="bg-food-orange text-white px-6 py-2 rounded-lg font-medium hover:bg-food-orange-dark transition-colors"
               >
                 Write First Review
               </button>
@@ -199,8 +199,8 @@ const ReviewList: React.FC<ReviewListProps> = ({
             <div key={review.id} className="p-6">
               <div className="flex items-start space-x-4">
                 {/* Avatar */}
-                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="h-5 w-5 text-red-600" />
+                <div className="w-10 h-10 bg-food-brown-light rounded-full flex items-center justify-center flex-shrink-0">
+                  <User className="h-5 w-5 text-food-brown" />
                 </div>
 
                 {/* Review Content */}

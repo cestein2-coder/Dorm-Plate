@@ -17,7 +17,7 @@ const stats: Stat[] = [
     value: 25000,
     suffix: '+',
     label: 'Active Students',
-    color: 'from-blue-500 to-blue-600'
+    color: 'from-food-brown to-food-brown-dark'
   },
   {
     id: 2,
@@ -25,7 +25,7 @@ const stats: Stat[] = [
     value: 150,
     suffix: '+',
     label: 'Restaurant Partners',
-    color: 'from-red-500 to-red-600'
+    color: 'from-food-orange to-food-orange-dark'
   },
   {
     id: 3,
@@ -33,7 +33,7 @@ const stats: Stat[] = [
     value: 500000,
     suffix: '+',
     label: 'Orders Delivered',
-    color: 'from-green-500 to-green-600'
+    color: 'from-food-green to-food-green-dark'
   },
   {
     id: 4,
@@ -41,7 +41,7 @@ const stats: Stat[] = [
     value: 98,
     suffix: '%',
     label: 'Satisfaction Rate',
-    color: 'from-yellow-500 to-yellow-600'
+    color: 'from-food-yellow to-food-yellow-dark'
   }
 ];
 

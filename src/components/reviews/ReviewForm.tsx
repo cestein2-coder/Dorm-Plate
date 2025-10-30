@@ -168,7 +168,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
               onChange={(e) => setComment(e.target.value)}
               placeholder="Share details about your experience, food quality, delivery time, etc."
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-food-orange focus:border-transparent resize-none"
               maxLength={500}
             />
             <div className="text-right text-xs text-gray-500 mt-1">
@@ -178,7 +178,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -195,7 +195,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
             <button
               type="submit"
               disabled={loading || rating === 0}
-              className="flex-1 bg-red-500 text-white px-4 py-3 rounded-lg font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="flex-1 bg-food-orange text-white px-4 py-3 rounded-lg font-medium hover:bg-food-orange-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {loading ? (
                 <>

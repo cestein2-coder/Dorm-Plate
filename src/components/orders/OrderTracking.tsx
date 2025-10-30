@@ -45,15 +45,15 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId, onBack }) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
-        return <Clock className="h-6 w-6 text-yellow-500" />;
+        return <Clock className="h-6 w-6 text-food-yellow" />;
       case 'confirmed':
-        return <CheckCircle className="h-6 w-6 text-blue-500" />;
+        return <CheckCircle className="h-6 w-6 text-food-brown" />;
       case 'preparing':
-        return <Clock className="h-6 w-6 text-orange-500" />;
+        return <Clock className="h-6 w-6 text-food-orange" />;
       case 'out_for_delivery':
-        return <Truck className="h-6 w-6 text-purple-500" />;
+        return <Truck className="h-6 w-6 text-food-orange-dark" />;
       case 'delivered':
-        return <CheckCircle className="h-6 w-6 text-green-500" />;
+        return <CheckCircle className="h-6 w-6 text-food-green" />;
       default:
         return <Clock className="h-6 w-6 text-gray-400" />;
     }
@@ -81,17 +81,17 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId, onBack }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-food-yellow-light text-food-yellow-dark';
       case 'confirmed':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-food-brown-light text-food-brown-dark';
       case 'preparing':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-food-orange-light text-food-orange-dark';
       case 'out_for_delivery':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-food-orange-light text-food-orange-dark';
       case 'delivered':
-        return 'bg-green-100 text-green-800';
+        return 'bg-food-green-light text-food-green-dark';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -118,7 +118,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId, onBack }) => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-food-orange mx-auto mb-4"></div>
           <p className="text-gray-600">Loading order details...</p>
         </div>
       </div>
@@ -129,11 +129,11 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId, onBack }) => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-500 text-xl mb-4">Error loading order</div>
+          <div className="text-food-orange text-xl mb-4">Error loading order</div>
           <p className="text-gray-600 mb-4">{error}</p>
           <button 
             onClick={loadOrderData}
-            className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors"
+            className="bg-food-orange text-white px-6 py-2 rounded-lg hover:bg-food-orange-dark transition-colors"
           >
             Try Again
           </button>
@@ -173,7 +173,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId, onBack }) => {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Estimated Delivery Time */}
         <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-          <div className="text-3xl font-bold text-red-600 mb-2">
+          <div className="text-3xl font-bold text-food-orange mb-2">
             {order.status === 'delivered' ? 'Delivered!' : getEstimatedDeliveryTime()}
           </div>
           <p className="text-gray-600">
@@ -296,12 +296,12 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId, onBack }) => {
         </div>
 
         {/* Support Contact */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-food-cream border border-food-cream-dark rounded-lg p-4">
           <div className="flex items-center">
-            <Phone className="h-5 w-5 text-blue-600 mr-2" />
+            <Phone className="h-5 w-5 text-food-brown mr-2" />
             <div>
-              <p className="text-blue-800 font-medium">Need help with your order?</p>
-              <p className="text-blue-600 text-sm">
+              <p className="text-food-brown font-medium">Need help with your order?</p>
+              <p className="text-food-brown text-sm">
                 Contact support at support@dormplate.com or call (555) 123-4567
               </p>
             </div>
@@ -310,7 +310,7 @@ const OrderTracking: React.FC<OrderTrackingProps> = ({ orderId, onBack }) => {
 
         {/* Reorder Button */}
         {order.status === 'delivered' && (
-          <button className="w-full bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition-colors">
+          <button className="w-full bg-food-orange text-white py-3 rounded-lg font-semibold hover:bg-food-orange-dark transition-colors">
             Reorder These Items
           </button>
         )}
