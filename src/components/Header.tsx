@@ -19,9 +19,17 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    setAuthMode('signin');
-    setAuthModalOpen(true);
+    try {
+      await signOut();
+      // Clear any local storage
+      localStorage.clear();
+      sessionStorage.clear();
+      // Redirect to home
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Error signing out:', error);
+      window.location.href = '/';
+    }
   };
   return (
     <>
@@ -35,28 +43,6 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
             </div>
             <span className="text-2xl font-bold text-food-brown">DormPlate</span>
           </div>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <a href="/sustainable-meals" className="text-food-brown hover:text-food-orange transition-colors font-medium" onClick={e => { e.preventDefault(); window.location.assign('/sustainable-meals'); }}>
-              Popular Meals
-            </a>
-            <a href="#features" className="text-food-brown hover:text-food-orange transition-colors font-medium">
-              Features
-            </a>
-            <a href="#pricing" className="text-food-brown hover:text-food-orange transition-colors font-medium">
-              Pricing
-            </a>
-            <a href="#testimonials" className="text-food-brown hover:text-food-orange transition-colors font-medium">
-              Reviews
-            </a>
-            <a href="#contact" className="text-food-brown hover:text-food-orange transition-colors font-medium">
-              Contact
-            </a>
-            <a href="/smart-kitchen" className="text-food-brown hover:text-food-orange transition-colors font-medium" onClick={e => { e.preventDefault(); window.location.assign('/smart-kitchen'); }}>
-              Smart Kitchen
-            </a>
-          </nav>
 
           {/* CTA Button */}
           <div className="hidden md:flex items-center space-x-4">
@@ -75,20 +61,12 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
                 </button>
               </div>
             ) : (
-              <>
-                <button
-                  onClick={() => handleAuthClick('signin')}
-                  className="text-food-brown hover:text-food-orange transition-colors font-medium"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => handleAuthClick('signup')}
-                  className="bg-gradient-to-r from-food-orange to-food-green text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
-                >
-                  Get Started
-                </button>
-              </>
+              <button
+                onClick={() => handleAuthClick('signup')}
+                className="bg-gradient-to-r from-food-orange to-food-green text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+              >
+                Get Started
+              </button>
             )}
           </div>
 
@@ -105,58 +83,30 @@ const Header: React.FC<HeaderProps> = ({ onNavigateToApp }) => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t">
             <nav className="flex flex-col space-y-4">
-              <a href="#top-meals" className="text-food-brown hover:text-food-orange transition-colors font-medium">
-                Popular Meals
-              </a>
-              <a href="#features" className="text-food-brown hover:text-food-orange transition-colors font-medium">
-                Features
-              </a>
-              <a href="#pricing" className="text-food-brown hover:text-food-orange transition-colors font-medium">
-                Pricing
-              </a>
-              <a href="#testimonials" className="text-food-brown hover:text-food-orange transition-colors font-medium">
-                Reviews
-              </a>
-              <a href="#contact" className="text-food-brown hover:text-food-orange transition-colors font-medium">
-                Contact
-              </a>
-              <a href="/smart-kitchen" className="text-food-brown hover:text-food-orange transition-colors font-medium" onClick={e => { e.preventDefault(); window.location.assign('/smart-kitchen'); }}>
-                Smart Kitchen
-              </a>
-              <div className="pt-4 border-t">
-                {user ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2 text-food-brown">
-                      <User className="h-5 w-5" />
-                      <span className="font-medium">
-                        {profile?.first_name || user.email}
-                      </span>
-                    </div>
-                    <button
-                      onClick={handleSignOut}
-                      className="flex items-center space-x-2 w-full text-left text-food-brown hover:text-food-orange transition-colors font-medium"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span>Sign Out</span>
-                    </button>
+              {user ? (
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2 text-food-brown">
+                    <User className="h-5 w-5" />
+                    <span className="font-medium">
+                      {profile?.first_name || user.email}
+                    </span>
                   </div>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => handleAuthClick('signin')}
-                      className="block w-full text-left text-food-brown hover:text-food-orange transition-colors font-medium mb-3"
-                    >
-                      Sign In
-                    </button>
-                    <button
-                      onClick={() => handleAuthClick('signup')}
-                      className="bg-gradient-to-r from-food-orange to-food-green text-white px-6 py-2 rounded-lg font-medium w-full"
-                    >
-                      Get Started
-                    </button>
-                  </>
-                )}
-              </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center space-x-2 w-full text-left text-food-brown hover:text-food-orange transition-colors font-medium"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleAuthClick('signup')}
+                  className="bg-gradient-to-r from-food-orange to-food-green text-white px-6 py-2 rounded-lg font-medium w-full"
+                >
+                  Get Started
+                </button>
+              )}
             </nav>
           </div>
         )}
