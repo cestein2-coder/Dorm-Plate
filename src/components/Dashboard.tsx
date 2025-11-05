@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Clock, Star, TrendingUp, Users, Search } from 'lucide-react';
+import { ShoppingBag, Star, TrendingUp, Search } from 'lucide-react';
 import { dashboardHelpers } from '../lib/mvp-supabase';
 import { useAuth } from './auth/AuthProvider';
 import RestaurantList from './restaurants/RestaurantList';
 import OrderTracking from './orders/OrderTracking';
-import GroupOrderView from './groups/GroupOrderView';
+import RemindersList from './reminders/RemindersList';
 
-type DashboardView = 'restaurants' | 'orders' | 'group' | 'order-tracking';
+type DashboardView = 'restaurants' | 'orders' | 'order-tracking';
 
 const Dashboard: React.FC = () => {
   const { user, profile } = useAuth();
@@ -14,7 +14,6 @@ const Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedOrderId, setSelectedOrderId] = useState<string>('');
-  const [groupJoinCode, setGroupJoinCode] = useState<string>('');
 
   useEffect(() => {
     if (user) {
@@ -41,11 +40,6 @@ const Dashboard: React.FC = () => {
     setCurrentView('order-tracking');
   };
 
-  const handleJoinGroup = (joinCode: string) => {
-    setGroupJoinCode(joinCode);
-    setCurrentView('group');
-  };
-
   // If user is not logged in, show the landing page content
   if (!user) {
     return (
@@ -63,12 +57,6 @@ const Dashboard: React.FC = () => {
         orderId={selectedOrderId} 
         onBack={() => setCurrentView('orders')} 
       />
-    );
-  }
-
-  if (currentView === 'group' && groupJoinCode) {
-    return (
-      <GroupOrderView joinCode={groupJoinCode} />
     );
   }
 
@@ -248,34 +236,8 @@ const Dashboard: React.FC = () => {
               )}
             </div>
 
-            {/* Group Order Section */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Users className="h-5 w-5 mr-2" />
-                Join a Group Order
-              </h2>
-              <p className="text-gray-600 mb-4">
-                Have a join code from a friend? Enter it below to join their group order.
-              </p>
-              
-              <div className="flex space-x-3 max-w-md">
-                <input
-                  type="text"
-                  placeholder="Enter join code (e.g., ABC123)"
-                  value={groupJoinCode}
-                  onChange={(e) => setGroupJoinCode(e.target.value.toUpperCase())}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  maxLength={6}
-                />
-                <button
-                  onClick={() => groupJoinCode && handleJoinGroup(groupJoinCode)}
-                  disabled={!groupJoinCode}
-                  className="bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Join Group
-                </button>
-              </div>
-            </div>
+            {/* Reminders Section */}
+            <RemindersList />
           </div>
         )}
       </div>

@@ -634,6 +634,66 @@ export const smartKitchenHelpers = {
   }
 };
 
+// ==============================================
+// REMINDER HELPERS
+// ==============================================
+
+export const reminderHelpers = {
+  async createReminder(reminderData: {
+    title: string;
+    description?: string;
+    reminder_type: 'meal' | 'share' | 'recipe';
+    scheduled_for: string;
+  }) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('User not authenticated') };
+
+    const { data, error } = await supabase
+      .from('reminders')
+      .insert({
+        user_id: user.id,
+        ...reminderData,
+        is_completed: false
+      })
+      .select()
+      .single();
+
+    return { data, error };
+  },
+
+  async getReminders() {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('User not authenticated') };
+
+    const { data, error } = await supabase
+      .from('reminders')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('scheduled_for', { ascending: true });
+
+    return { data, error };
+  },
+
+  async updateReminder(reminderId: string, updates: any) {
+    const { data, error } = await supabase
+      .from('reminders')
+      .update(updates)
+      .eq('id', reminderId)
+      .select()
+      .single();
+
+    return { data, error };
+  },
+
+  async deleteReminder(reminderId: string) {
+    const { error } = await supabase
+      .from('reminders')
+      .delete()
+      .eq('id', reminderId);
+
+    return { error };
+  }
+};
 
 
 
