@@ -28,7 +28,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
   const universities = [
     'UC Berkeley', 'UCLA', 'USC', 'Stanford University', 'UC San Diego',
     'UC Irvine', 'UC Santa Barbara', 'Cal Poly San Luis Obispo',
-    'San Diego State University', 'Other'
+    'San Diego State University', 'University of Illinois Urbana-Champaign', 'Other'
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
