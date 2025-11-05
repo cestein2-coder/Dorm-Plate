@@ -85,14 +85,20 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 's
 
         setSuccess('Account created successfully! Please check your email to verify your account.');
       } else {
-        const { error } = await authHelpers.signIn(formData.email, formData.password);
+        const { data, error } = await authHelpers.signIn(formData.email, formData.password);
         if (error) throw error;
 
-        setSuccess('Signed in successfully!');
-        setTimeout(() => {
-          onClose();
-          window.location.reload();
-        }, 1000);
+        // Check if session was created (user is verified)
+        if (data?.session) {
+          setSuccess('Signed in successfully!');
+          setTimeout(() => {
+            onClose();
+            // Don't reload - let AuthProvider handle the state change
+          }, 800);
+        } else {
+          // User exists but might not be verified
+          setSuccess('Please check your email to verify your account before signing in.');
+        }
       }
     } catch (err: any) {
       let errorMessage = 'An error occurred';
