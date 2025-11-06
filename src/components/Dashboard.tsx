@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Star, TrendingUp, Search, Utensils, LogOut, User, Menu, X, Refrigerator } from 'lucide-react';
+import { ShoppingBag, Clock, DollarSign, Utensils, LogOut, Menu, X, Refrigerator, Bell } from 'lucide-react';
 import { dashboardHelpers } from '../lib/mvp-supabase';
 import { useAuth } from './auth/AuthProvider';
-import RestaurantList from './restaurants/RestaurantList';
-import OrderTracking from './orders/OrderTracking';
-import RemindersList from './reminders/RemindersList';
 import FridgeTracker from './fridge/FridgeTracker';
+import RemindersList from './reminders/RemindersList';
 
-type DashboardView = 'restaurants' | 'orders' | 'order-tracking' | 'fridge';
+type DashboardView = 'home' | 'fridge' | 'reminders';
 
 const Dashboard: React.FC = () => {
   const { user, profile, signOut } = useAuth();
-  const [currentView, setCurrentView] = useState<DashboardView>('restaurants');
+  const [currentView, setCurrentView] = useState<DashboardView>('home');
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedOrderId, setSelectedOrderId] = useState<string>('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
