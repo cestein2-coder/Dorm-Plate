@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Star, TrendingUp, Search } from 'lucide-react';
+import { ShoppingBag, Star, TrendingUp, Search, Utensils, LogOut, User, Menu, X } from 'lucide-react';
 import { dashboardHelpers } from '../lib/mvp-supabase';
 import { useAuth } from './auth/AuthProvider';
 import RestaurantList from './restaurants/RestaurantList';
@@ -9,11 +9,17 @@ import RemindersList from './reminders/RemindersList';
 type DashboardView = 'restaurants' | 'orders' | 'order-tracking';
 
 const Dashboard: React.FC = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [currentView, setCurrentView] = useState<DashboardView>('restaurants');
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [selectedOrderId, setSelectedOrderId] = useState<string>('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    setIsMenuOpen(false);
+  };
 
   useEffect(() => {
     if (user) {
@@ -40,22 +46,11 @@ const Dashboard: React.FC = () => {
     setCurrentView('order-tracking');
   };
 
-  // If user is not logged in, show the landing page content
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Public Restaurant Browse */}
-        <RestaurantList />
-      </div>
-    );
-  }
-
-  // Render specific views
   if (currentView === 'order-tracking' && selectedOrderId) {
     return (
-      <OrderTracking 
-        orderId={selectedOrderId} 
-        onBack={() => setCurrentView('orders')} 
+      <OrderTracking
+        orderId={selectedOrderId}
+        onBack={() => setCurrentView('orders')}
       />
     );
   }
@@ -66,57 +61,123 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 shadow-sm z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Welcome back, {profile?.first_name}!
-              </h1>
-              <p className="text-gray-600">
-                Ready to order some delicious food?
-              </p>
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <div className="flex items-center space-x-3">
+              <div className="bg-gradient-to-r from-red-500 to-red-600 p-2 rounded-lg">
+                <Utensils className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gray-900">DormPlate</span>
             </div>
-            
-            {/* Quick Actions */}
-            <div className="flex items-center space-x-4">
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
               <button
                 onClick={() => setCurrentView('restaurants')}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center"
+                className="text-gray-700 hover:text-red-600 font-medium transition-colors flex items-center space-x-2"
               >
-                <Search className="h-4 w-4 mr-2" />
-                Browse Restaurants
+                <Search className="h-4 w-4" />
+                <span>Browse</span>
+              </button>
+              <button
+                onClick={() => setCurrentView('orders')}
+                className="text-gray-700 hover:text-red-600 font-medium transition-colors flex items-center space-x-2"
+              >
+                <ShoppingBag className="h-4 w-4" />
+                <span>My Orders</span>
+              </button>
+            </div>
+
+            {/* User Menu */}
+            <div className="flex items-center space-x-4">
+              {/* Desktop Profile */}
+              <div className="hidden md:flex items-center space-x-3">
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">
+                    {profile?.first_name || user?.email}
+                  </p>
+                  <p className="text-xs text-gray-500">Student</p>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-700 hover:text-red-600"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                {isMenuOpen ? (
+                  <X className="h-6 w-6 text-gray-900" />
+                ) : (
+                  <Menu className="h-6 w-6 text-gray-900" />
+                )}
               </button>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <div className="flex space-x-8 border-b">
-            <button
-              onClick={() => setCurrentView('orders')}
-              className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                currentView === 'orders'
-                  ? 'border-red-500 text-red-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              My Orders
-            </button>
-          </div>
+          {/* Mobile Menu */}
+          {isMenuOpen && (
+            <div className="md:hidden border-t py-4 space-y-3">
+              <button
+                onClick={() => {
+                  setCurrentView('restaurants');
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                Browse Restaurants
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentView('orders');
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                My Orders
+              </button>
+              <div className="border-t pt-3 mt-3 flex items-center justify-between px-4">
+                <span className="text-sm font-medium text-gray-900">
+                  {profile?.first_name || user?.email}
+                </span>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-2 text-red-600 hover:text-red-700 font-medium text-sm"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+      {/* Main Content */}
+      <div className="pt-20 pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Welcome Section */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Welcome back, {profile?.first_name || 'Student'}!
+            </h1>
+            <p className="text-gray-600">
+              Order from your favorite campus restaurants and get delivery in 15 minutes.
+            </p>
           </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Stats Cards */}
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-lg shadow-sm p-6">
+
+          {/* Stats Cards */}
+          {!loading && (
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div className="flex items-center">
                   <div className="p-3 bg-red-100 rounded-lg">
                     <ShoppingBag className="h-6 w-6 text-red-600" />
@@ -130,7 +191,7 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div className="flex items-center">
                   <div className="p-3 bg-green-100 rounded-lg">
                     <TrendingUp className="h-6 w-6 text-green-600" />
@@ -144,7 +205,7 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div className="flex items-center">
                   <div className="p-3 bg-blue-100 rounded-lg">
                     <Star className="h-6 w-6 text-blue-600" />
@@ -152,7 +213,7 @@ const Dashboard: React.FC = () => {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      ${dashboardData?.total_orders > 0 
+                      ${dashboardData?.total_orders > 0
                         ? (dashboardData.total_spent / dashboardData.total_orders).toFixed(2)
                         : '0.00'
                       }
@@ -161,7 +222,17 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             </div>
+          )}
+        </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+          </div>
+        ) : (
+          <div className="space-y-8">
             {/* Recent Orders */}
             <div className="bg-white rounded-lg shadow-sm">
               <div className="p-6 border-b">
