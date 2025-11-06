@@ -67,24 +67,24 @@ const Dashboard: React.FC = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-r from-red-500 to-red-600 p-2 rounded-lg">
+              <div className="bg-gradient-to-r from-food-orange to-food-green p-2 rounded-lg">
                 <Utensils className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">DormPlate</span>
+              <span className="text-xl font-bold text-food-brown">DormPlate</span>
             </div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
               <button
                 onClick={() => setCurrentView('restaurants')}
-                className="text-gray-700 hover:text-red-600 font-medium transition-colors flex items-center space-x-2"
+                className="text-food-brown hover:text-food-orange font-medium transition-colors flex items-center space-x-2"
               >
                 <Search className="h-4 w-4" />
                 <span>Browse</span>
               </button>
               <button
                 onClick={() => setCurrentView('orders')}
-                className="text-gray-700 hover:text-red-600 font-medium transition-colors flex items-center space-x-2"
+                className="text-food-brown hover:text-food-orange font-medium transition-colors flex items-center space-x-2"
               >
                 <ShoppingBag className="h-4 w-4" />
                 <span>My Orders</span>
@@ -103,7 +103,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <button
                   onClick={handleSignOut}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-700 hover:text-red-600"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-food-brown hover:text-food-orange"
                 >
                   <LogOut className="h-5 w-5" />
                 </button>
@@ -150,7 +150,7 @@ const Dashboard: React.FC = () => {
                 </span>
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center space-x-2 text-red-600 hover:text-red-700 font-medium text-sm"
+                  className="flex items-center space-x-2 text-food-orange hover:text-food-orange-dark font-medium text-sm"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Sign Out</span>
@@ -179,8 +179,8 @@ const Dashboard: React.FC = () => {
             <div className="grid md:grid-cols-3 gap-6 mb-8">
               <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div className="flex items-center">
-                  <div className="p-3 bg-red-100 rounded-lg">
-                    <ShoppingBag className="h-6 w-6 text-red-600" />
+                  <div className="p-3 bg-orange-100 rounded-lg">
+                    <ShoppingBag className="h-6 w-6 text-food-orange" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Total Orders</p>
@@ -194,7 +194,7 @@ const Dashboard: React.FC = () => {
               <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div className="flex items-center">
                   <div className="p-3 bg-green-100 rounded-lg">
-                    <TrendingUp className="h-6 w-6 text-green-600" />
+                    <TrendingUp className="h-6 w-6 text-food-green" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Total Spent</p>
@@ -207,8 +207,8 @@ const Dashboard: React.FC = () => {
 
               <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div className="flex items-center">
-                  <div className="p-3 bg-blue-100 rounded-lg">
-                    <Star className="h-6 w-6 text-blue-600" />
+                  <div className="p-3 bg-food-brown-light rounded-lg">
+                    <Star className="h-6 w-6 text-food-brown" />
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
@@ -229,7 +229,7 @@ const Dashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-food-orange"></div>
           </div>
         ) : (
           <div className="space-y-8">
@@ -272,7 +272,7 @@ const Dashboard: React.FC = () => {
                               order.status === 'delivered' 
                                 ? 'bg-green-100 text-green-800'
                                 : order.status === 'cancelled'
-                                ? 'bg-red-100 text-red-800'
+                                ? 'bg-orange-100 text-food-orange'
                                 : 'bg-yellow-100 text-yellow-800'
                             }`}>
                               {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -281,7 +281,7 @@ const Dashboard: React.FC = () => {
                           
                           <button
                             onClick={() => handleViewOrder(order.id)}
-                            className="text-red-600 hover:text-red-700 font-medium text-sm"
+                            className="text-food-orange hover:text-food-orange-dark font-medium text-sm"
                           >
                             View Details
                           </button>
@@ -299,7 +299,7 @@ const Dashboard: React.FC = () => {
                   </p>
                   <button
                     onClick={() => setCurrentView('restaurants')}
-                    className="bg-red-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors"
+                    className="bg-food-orange text-white px-6 py-2 rounded-lg font-medium hover:bg-food-orange-dark transition-colors"
                   >
                     Browse Restaurants
                   </button>
