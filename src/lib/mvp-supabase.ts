@@ -695,5 +695,90 @@ export const reminderHelpers = {
   }
 };
 
+// ==============================================
+// FRIDGE ITEM HELPERS (Food Expiration Tracking)
+// ==============================================
+
+export const fridgeItemHelpers = {
+  async createFridgeItem(itemData: {
+    item_name: string;
+    category?: 'dairy' | 'meat' | 'produce' | 'leftovers' | 'beverages' | 'other';
+    quantity?: string;
+    purchase_date?: string;
+    expiration_date: string;
+    notes?: string;
+  }) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('User not authenticated') };
+
+    const { data, error } = await supabase
+      .from('fridge_items')
+      .insert({
+        user_id: user.id,
+        ...itemData,
+        is_expired: false
+      })
+      .select()
+      .single();
+
+    return { data, error };
+  },
+
+  async getFridgeItems() {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('User not authenticated') };
+
+    const { data, error } = await supabase
+      .from('fridge_items')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('expiration_date', { ascending: true });
+
+    return { data, error };
+  },
+
+  async getExpiringSoon(daysAhead: number = 3) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('User not authenticated') };
+
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + daysAhead);
+
+    const { data, error } = await supabase
+      .from('fridge_items')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_expired', false)
+      .lte('expiration_date', futureDate.toISOString())
+      .order('expiration_date', { ascending: true });
+
+    return { data, error };
+  },
+
+  async updateFridgeItem(itemId: string, updates: any) {
+    const { data, error } = await supabase
+      .from('fridge_items')
+      .update(updates)
+      .eq('id', itemId)
+      .select()
+      .single();
+
+    return { data, error };
+  },
+
+  async markAsExpired(itemId: string) {
+    return this.updateFridgeItem(itemId, { is_expired: true });
+  },
+
+  async deleteFridgeItem(itemId: string) {
+    const { error } = await supabase
+      .from('fridge_items')
+      .delete()
+      .eq('id', itemId);
+
+    return { error };
+  }
+};
+
 
 

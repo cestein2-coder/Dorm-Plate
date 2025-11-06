@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Star, TrendingUp, Search, Utensils, LogOut, User, Menu, X } from 'lucide-react';
+import { ShoppingBag, Star, TrendingUp, Search, Utensils, LogOut, User, Menu, X, Refrigerator } from 'lucide-react';
 import { dashboardHelpers } from '../lib/mvp-supabase';
 import { useAuth } from './auth/AuthProvider';
 import RestaurantList from './restaurants/RestaurantList';
 import OrderTracking from './orders/OrderTracking';
 import RemindersList from './reminders/RemindersList';
+import FridgeTracker from './fridge/FridgeTracker';
 
-type DashboardView = 'restaurants' | 'orders' | 'order-tracking';
+type DashboardView = 'restaurants' | 'orders' | 'order-tracking' | 'fridge';
 
 const Dashboard: React.FC = () => {
   const { user, profile, signOut } = useAuth();
@@ -59,6 +60,36 @@ const Dashboard: React.FC = () => {
     return <RestaurantList />;
   }
 
+  if (currentView === 'fridge') {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 shadow-sm z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-3">
+                <div className="bg-gradient-to-r from-food-orange to-food-green p-2 rounded-lg">
+                  <Utensils className="h-6 w-6 text-white" />
+                </div>
+                <span className="text-xl font-bold text-food-brown">DormPlate</span>
+              </div>
+              <button
+                onClick={() => setCurrentView('orders')}
+                className="text-food-brown hover:text-food-orange font-medium"
+              >
+                ← Back to Dashboard
+              </button>
+            </div>
+          </div>
+        </header>
+        <div className="pt-20 pb-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <FridgeTracker />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Fixed Header */}
@@ -88,6 +119,13 @@ const Dashboard: React.FC = () => {
               >
                 <ShoppingBag className="h-4 w-4" />
                 <span>My Orders</span>
+              </button>
+              <button
+                onClick={() => setCurrentView('fridge')}
+                className="text-food-brown hover:text-food-orange font-medium transition-colors flex items-center space-x-2"
+              >
+                <Refrigerator className="h-4 w-4" />
+                <span>My Fridge</span>
               </button>
             </div>
 
@@ -143,6 +181,15 @@ const Dashboard: React.FC = () => {
                 className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
               >
                 My Orders
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentView('fridge');
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                My Fridge
               </button>
               <div className="border-t pt-3 mt-3 flex items-center justify-between px-4">
                 <span className="text-sm font-medium text-gray-900">
