@@ -38,9 +38,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signOut = async () => {
-    await authHelpers.signOut();
-    setUser(null);
-    setProfile(null);
+    try {
+      // Clear Supabase session
+      await authHelpers.signOut();
+      
+      // Clear local state
+      setUser(null);
+      setProfile(null);
+      
+      // Clear any localStorage items
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Force redirect to home (landing page)
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Even if there's an error, clear local state
+      setUser(null);
+      setProfile(null);
+      window.location.href = '/';
+    }
   };
 
   useEffect(() => {

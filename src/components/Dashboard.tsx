@@ -17,8 +17,13 @@ const Dashboard: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut();
-    setIsMenuOpen(false);
+    try {
+      setIsMenuOpen(false);
+      await signOut();
+      // User will be redirected to landing page automatically
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   };
 
   useEffect(() => {
