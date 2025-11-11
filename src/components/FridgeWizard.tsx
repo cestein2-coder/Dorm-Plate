@@ -1,13 +1,14 @@
 import React, { useMemo, useState } from 'react';
-import { Search, Sparkles, Trash2, BarChart2, RefreshCw } from 'lucide-react';
+import { Search, Sparkles, Trash2, BarChart2, RefreshCw, AlertCircle } from 'lucide-react';
 
 type Suggestion = {
   title: string;
   ingredients: string[];
   est_cost: number;
+  description?: string;
 };
 
-const KNOWN_RECIPES: Suggestion[] = [
+const FALLBACK_RECIPES: Suggestion[] = [
   { title: 'Veggie Omelette', ingredients: ['eggs', 'milk', 'cheese', 'spinach'], est_cost: 3.5 },
   { title: 'Pasta Primavera', ingredients: ['pasta', 'tomato', 'zucchini', 'olive oil'], est_cost: 6.0 },
   { title: 'Fried Rice', ingredients: ['rice', 'egg', 'carrot', 'peas', 'soy sauce'], est_cost: 4.0 },
@@ -36,6 +37,9 @@ const FridgeWizard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [addItemText, setAddItemText] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [suggestionError, setSuggestionError] = useState<string | null>(null);
 
   const parsedItems = useMemo(() => {
     const tokens = rawInput
@@ -45,26 +49,57 @@ const FridgeWizard: React.FC = () => {
     return tokens;
   }, [rawInput, refreshKey]);
 
-  const suggestions = useMemo(() => {
-    // simple matching: recipe matches if >= 1 ingredient in fridge
-    const found: Suggestion[] = [];
-    for (const r of KNOWN_RECIPES) {
-      const matchCount = r.ingredients.filter(i => parsedItems.includes(i)).length;
-      if (matchCount > 0) found.push({ ...r });
-    }
-    // if none found, fallback to suggest recipes based on the first item
-    if (found.length === 0 && parsedItems.length > 0) {
-      found.push({ title: `Quick ${parsedItems[0]} Stir`, ingredients: [parsedItems[0]], est_cost: 3.0 });
-      found.push({ title: `Simple ${parsedItems[0]} Salad`, ingredients: [parsedItems[0]], est_cost: 2.5 });
-    }
-    return found;
-  }, [parsedItems]);
+  const fetchAISuggestions = async (items: string[]) => {
+    if (items.length === 0) return;
 
-  const onAddFridge = () => {
+    setLoadingSuggestions(true);
+    setSuggestionError(null);
+
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/gemini-meal-suggestions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${anonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ingredients: items,
+          dietary_preferences: '',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch suggestions');
+      }
+
+      const data = await response.json();
+      if (data.recipes && data.recipes.length > 0) {
+        setSuggestions(data.recipes);
+      } else {
+        setSuggestions(FALLBACK_RECIPES.filter(r =>
+          r.ingredients.some(i => items.includes(i))
+        ).slice(0, 5));
+      }
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+      setSuggestionError('Could not generate AI suggestions, showing similar recipes');
+      setSuggestions(FALLBACK_RECIPES.filter(r =>
+        r.ingredients.some(i => items.includes(i))
+      ).slice(0, 5));
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const onAddFridge = async () => {
     const items = parsedItems;
     if (items.length === 0) return;
     setFridgeItems(items);
     setStep(2);
+    await fetchAISuggestions(items);
   };
 
   const toggleSuggestion = (s: Suggestion) => {
@@ -164,19 +199,33 @@ const FridgeWizard: React.FC = () => {
 
           <div className="mb-4">
             <h4 className="font-semibold text-food-brown mb-2">AI Meal Suggestions <Sparkles className="inline-block ml-2" /></h4>
-            {suggestions.filter(s => !searchTerm || s.ingredients.join(' ').includes(searchTerm.toLowerCase())).length === 0 ? (
+
+            {suggestionError && (
+              <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-yellow-800">{suggestionError}</p>
+              </div>
+            )}
+
+            {loadingSuggestions ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-2 border-food-brown border-t-food-orange"></div>
+                <span className="ml-3 text-food-brown">Getting AI suggestions...</span>
+              </div>
+            ) : suggestions.filter(s => !searchTerm || s.ingredients.join(' ').includes(searchTerm.toLowerCase())).length === 0 ? (
               <p className="text-food-brown/70">No suggestions available — add more items.</p>
             ) : (
               <div className="grid gap-3">
                 {suggestions.filter(s => !searchTerm || s.ingredients.join(' ').includes(searchTerm.toLowerCase())).map(s => (
-                  <div key={s.title} className="p-3 border rounded flex justify-between items-center">
-                    <div>
+                  <div key={s.title} className="p-3 border rounded flex justify-between items-start gap-3">
+                    <div className="flex-1">
                       <div className="font-semibold text-food-brown">{s.title}</div>
                       <div className="text-sm text-food-brown/70">{s.ingredients.join(', ')}</div>
+                      {s.description && <div className="text-xs text-food-brown/60 mt-1">{s.description}</div>}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col items-end gap-2">
                       <div className="text-sm text-food-brown/70">Est ${s.est_cost.toFixed(2)}</div>
-                      <button onClick={() => toggleSuggestion(s)} className={`px-3 py-1 rounded ${selectedSuggestions.find(x=>x.title===s.title)? 'bg-food-brown text-white' : 'border text-food-brown'}`}>
+                      <button onClick={() => toggleSuggestion(s)} className={`px-3 py-1 rounded text-sm ${selectedSuggestions.find(x=>x.title===s.title)? 'bg-food-brown text-white' : 'border text-food-brown'}`}>
                         {selectedSuggestions.find(x=>x.title===s.title) ? 'Selected' : 'Use'}
                       </button>
                     </div>
