@@ -16,6 +16,22 @@ const Dashboard: React.FC = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // Interactive states for Campus Dining Sync
+  const [selectedDiningHall, setSelectedDiningHall] = useState<string | null>(null);
+  
+  // Interactive states for Waste Dashboard
+  const [selectedGoal, setSelectedGoal] = useState<'waste' | 'savings'>('waste');
+  
+  // Interactive states for Community
+  const [likedMeals, setLikedMeals] = useState<Set<number>>(new Set());
+  const [savedMeals, setSavedMeals] = useState<Set<number>>(new Set());
+  
+  // Interactive states for Achievements
+  const [selectedAchievement, setSelectedAchievement] = useState<number | null>(null);
+  
+  // Interactive states for Sustainability Tips
+  const [markedTips, setMarkedTips] = useState<Set<number>>(new Set());
 
   const handleSignOut = async () => {
     try {
@@ -347,22 +363,43 @@ const Dashboard: React.FC = () => {
                 </h3>
                 <div className="space-y-3">
                   {[
-                    { hall: 'Illinois Street Dining Center', hours: '7:00 AM - 9:00 PM', distance: '0.2 miles', status: 'Open' },
-                    { hall: 'Pennsylvania Avenue (PAR)', hours: '7:00 AM - 8:00 PM', distance: '0.5 miles', status: 'Open' },
-                    { hall: 'Field of Greens', hours: '11:00 AM - 7:00 PM', distance: '0.3 miles', status: 'Open' }
-                  ].map((hall, idx) => (
-                    <div key={idx} className="border border-gray-200 rounded-lg p-4 hover:border-blue-400 transition-colors">
+                    { id: 'isdc', hall: 'Illinois Street Dining Center', hours: '7:00 AM - 9:00 PM', distance: '0.2 miles', status: 'Open' },
+                    { id: 'par', hall: 'Pennsylvania Avenue (PAR)', hours: '7:00 AM - 8:00 PM', distance: '0.5 miles', status: 'Open' },
+                    { id: 'fog', hall: 'Field of Greens', hours: '11:00 AM - 7:00 PM', distance: '0.3 miles', status: 'Open' }
+                  ].map((hall) => (
+                    <button
+                      key={hall.id}
+                      onClick={() => setSelectedDiningHall(selectedDiningHall === hall.id ? null : hall.id)}
+                      className={`w-full border rounded-lg p-4 transition-all text-left ${
+                        selectedDiningHall === hall.id 
+                          ? 'border-blue-400 bg-blue-50 shadow-md' 
+                          : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
+                      }`}
+                    >
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-semibold text-food-brown">{hall.hall}</p>
                           <p className="text-sm text-gray-600">⏰ {hall.hours}</p>
                           <p className="text-sm text-gray-500">📍 {hall.distance} away</p>
+                          {selectedDiningHall === hall.id && (
+                            <div className="mt-3 pt-3 border-t border-blue-200">
+                              <p className="text-sm font-medium text-blue-700 mb-2">Quick Actions:</p>
+                              <div className="flex gap-2">
+                                <button className="px-3 py-1 bg-blue-500 text-white text-xs rounded-full hover:bg-blue-600 transition-colors">
+                                  📍 Get Directions
+                                </button>
+                                <button className="px-3 py-1 bg-green-500 text-white text-xs rounded-full hover:bg-green-600 transition-colors">
+                                  🍽️ View Menu
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
                           {hall.status}
                         </span>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -423,26 +460,55 @@ const Dashboard: React.FC = () => {
 
               {/* Progress Chart */}
               <div className="bg-white rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-semibold text-food-brown mb-4">Monthly Progress</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-food-brown">Monthly Progress</h3>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setSelectedGoal('waste')}
+                      className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                        selectedGoal === 'waste'
+                          ? 'bg-food-green text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      Waste Goal
+                    </button>
+                    <button
+                      onClick={() => setSelectedGoal('savings')}
+                      className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                        selectedGoal === 'savings'
+                          ? 'bg-food-orange text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      Savings Goal
+                    </button>
+                  </div>
+                </div>
                 <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-600">Waste Reduction Goal</span>
-                      <span className="font-semibold text-food-green">82%</span>
+                  {selectedGoal === 'waste' ? (
+                    <div>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-gray-600">Waste Reduction Goal</span>
+                        <span className="font-semibold text-food-green">82%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3 cursor-pointer hover:h-4 transition-all">
+                        <div className="bg-food-green rounded-full h-3 hover:h-4 transition-all" style={{ width: '82%' }}></div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">🎯 Goal: Reduce 10 lbs by end of month • You're almost there!</p>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div className="bg-food-green rounded-full h-3" style={{ width: '82%' }}></div>
+                  ) : (
+                    <div>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-gray-600">Savings Goal ($50)</span>
+                        <span className="font-semibold text-food-orange">91%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3 cursor-pointer hover:h-4 transition-all">
+                        <div className="bg-food-orange rounded-full h-3 hover:h-4 transition-all" style={{ width: '91%' }}></div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">💰 Goal: Save $50 by end of month • Just $4.50 more to go!</p>
                     </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-600">Savings Goal ($50)</span>
-                      <span className="font-semibold text-food-orange">91%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div className="bg-food-orange rounded-full h-3" style={{ width: '91%' }}></div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -454,16 +520,29 @@ const Dashboard: React.FC = () => {
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { badge: '🌟', title: 'First Week', desc: 'Completed' },
-                    { badge: '🥇', title: 'Top Saver', desc: 'Top 10%' },
-                    { badge: '♻️', title: 'Eco Warrior', desc: '20 items saved' },
-                    { badge: '🎯', title: 'Goal Crusher', desc: 'Hit 3 goals' }
+                    { badge: '🌟', title: 'First Week', desc: 'Completed', details: 'Successfully completed your first week using DormPlate! Keep up the great work!' },
+                    { badge: '🥇', title: 'Top Saver', desc: 'Top 10%', details: `You're in the top 10% of students saving money on meals. You've saved $87 this month!` },
+                    { badge: '♻️', title: 'Eco Warrior', desc: '20 items saved', details: `Prevented 20 food items from going to waste. That's 12 lbs of food saved from landfills!` },
+                    { badge: '🎯', title: 'Goal Crusher', desc: 'Hit 3 goals', details: 'Achieved 3 sustainability goals this month. Your next goal: Save 5 more meals!' }
                   ].map((achievement, idx) => (
-                    <div key={idx} className="bg-white rounded-lg p-4 text-center hover:shadow-md transition-shadow">
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedAchievement(selectedAchievement === idx ? null : idx)}
+                      className={`bg-white rounded-lg p-4 text-center transition-all ${
+                        selectedAchievement === idx 
+                          ? 'shadow-lg scale-105 ring-2 ring-amber-500' 
+                          : 'hover:shadow-md hover:scale-102'
+                      }`}
+                    >
                       <div className="text-4xl mb-2">{achievement.badge}</div>
                       <p className="font-semibold text-food-brown text-sm">{achievement.title}</p>
                       <p className="text-xs text-gray-600">{achievement.desc}</p>
-                    </div>
+                      {selectedAchievement === idx && (
+                        <p className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
+                          {achievement.details}
+                        </p>
+                      )}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -479,12 +558,40 @@ const Dashboard: React.FC = () => {
                     'Meal prep on Sundays to reduce food waste during busy weeks',
                     'Store herbs in water like flowers to keep them fresh longer',
                     'Freeze leftovers within 2 hours to maintain quality and safety'
-                  ].map((tip, idx) => (
-                    <div key={idx} className="flex items-start space-x-3 p-3 bg-green-50 rounded-lg">
-                      <span className="text-green-600 text-xl">✓</span>
-                      <p className="text-sm text-gray-700">{tip}</p>
-                    </div>
-                  ))}
+                  ].map((tip, idx) => {
+                    const isMarked = markedTips.has(idx);
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          const newMarked = new Set(markedTips);
+                          if (isMarked) {
+                            newMarked.delete(idx);
+                          } else {
+                            newMarked.add(idx);
+                          }
+                          setMarkedTips(newMarked);
+                        }}
+                        className={`w-full flex items-start space-x-3 p-3 rounded-lg transition-all text-left ${
+                          isMarked 
+                            ? 'bg-green-100 border-2 border-green-500' 
+                            : 'bg-green-50 hover:bg-green-100 border-2 border-transparent'
+                        }`}
+                      >
+                        <span className={`text-xl transition-all ${isMarked ? 'text-green-600' : 'text-gray-400'}`}>
+                          {isMarked ? '✓' : '○'}
+                        </span>
+                        <div className="flex-1">
+                          <p className={`text-sm ${isMarked ? 'text-gray-600 line-through' : 'text-gray-700'}`}>
+                            {tip}
+                          </p>
+                          {isMarked && (
+                            <p className="text-xs text-green-600 mt-1">Marked as helpful!</p>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -505,40 +612,74 @@ const Dashboard: React.FC = () => {
                   { meal: 'Budget Chicken Tacos', user: 'Mike T.', likes: 38, ingredients: 'Chicken, tortillas, salsa', time: '15 mins', emoji: '🌮' },
                   { meal: 'Quick Pasta Primavera', user: 'Emily R.', likes: 52, ingredients: 'Pasta, mixed veggies, cheese', time: '12 mins', emoji: '🍝' },
                   { meal: 'Protein Power Bowl', user: 'Alex M.', likes: 41, ingredients: 'Rice, beans, avocado', time: '8 mins', emoji: '🥗' }
-                ].map((item, idx) => (
-                  <div key={idx} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-green-100 rounded-full flex items-center justify-center text-2xl">
-                          {item.emoji}
+                ].map((item, idx) => {
+                  const isLiked = likedMeals.has(idx);
+                  const isSaved = savedMeals.has(idx);
+                  const displayLikes = item.likes + (isLiked ? 1 : 0);
+                  
+                  return (
+                    <div key={idx} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-green-100 rounded-full flex items-center justify-center text-2xl">
+                            {item.emoji}
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-food-brown">{item.meal}</h3>
+                            <p className="text-sm text-gray-600">by {item.user}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-bold text-food-brown">{item.meal}</h3>
-                          <p className="text-sm text-gray-600">by {item.user}</p>
-                        </div>
+                        <button
+                          onClick={() => {
+                            const newLiked = new Set(likedMeals);
+                            if (isLiked) {
+                              newLiked.delete(idx);
+                            } else {
+                              newLiked.add(idx);
+                            }
+                            setLikedMeals(newLiked);
+                          }}
+                          className={`transition-all ${
+                            isLiked ? 'text-red-500 scale-110' : 'text-gray-400 hover:text-red-500'
+                          }`}
+                        >
+                          {isLiked ? '❤️' : '🤍'} {displayLikes}
+                        </button>
                       </div>
-                      <button className="text-red-500 hover:text-red-600 transition-colors">
-                        ❤️ {item.likes}
-                      </button>
+                      <div className="space-y-2 mb-4">
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Ingredients:</span> {item.ingredients}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Time:</span> {item.time}
+                        </p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button className="flex-1 bg-food-orange text-white py-2 rounded-lg font-medium hover:bg-food-orange-dark transition-colors">
+                          View Recipe
+                        </button>
+                        <button
+                          onClick={() => {
+                            const newSaved = new Set(savedMeals);
+                            if (isSaved) {
+                              newSaved.delete(idx);
+                            } else {
+                              newSaved.add(idx);
+                            }
+                            setSavedMeals(newSaved);
+                          }}
+                          className={`px-4 border-2 rounded-lg font-medium transition-colors ${
+                            isSaved
+                              ? 'border-food-green bg-food-green text-white'
+                              : 'border-food-orange text-food-orange hover:bg-food-orange hover:text-white'
+                          }`}
+                        >
+                          {isSaved ? '✓ Saved' : 'Save'}
+                        </button>
+                      </div>
                     </div>
-                    <div className="space-y-2 mb-4">
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">Ingredients:</span> {item.ingredients}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <span className="font-medium">Time:</span> {item.time}
-                      </p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button className="flex-1 bg-food-orange text-white py-2 rounded-lg font-medium hover:bg-food-orange-dark transition-colors">
-                        View Recipe
-                      </button>
-                      <button className="px-4 border-2 border-food-orange text-food-orange rounded-lg font-medium hover:bg-food-orange hover:text-white transition-colors">
-                        Save
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Share Your Meal CTA */}

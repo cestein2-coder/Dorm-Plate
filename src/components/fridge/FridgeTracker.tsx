@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Refrigerator, Plus, Trash2, AlertCircle, Clock, CheckCircle, Sparkles, Loader2 } from 'lucide-react';
 import { fridgeItemHelpers } from '../../lib/mvp-supabase';
 import { fridgeAlertAI, RecipeSuggestion } from '../../lib/gemini-service';
@@ -21,6 +21,7 @@ export default function FridgeTracker() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<RecipeSuggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const hasGeneratedSuggestions = useRef(false);
   const [newItem, setNewItem] = useState({
     item_name: '',
     category: 'other' as const,
@@ -28,6 +29,14 @@ export default function FridgeTracker() {
     expiration_date: '',
     notes: ''
   });
+
+  const getDaysUntilExpiration = (expirationDate: string) => {
+    const now = new Date();
+    const expiry = new Date(expirationDate);
+    const diffTime = expiry.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
 
   useEffect(() => {
     loadFridgeItems();
@@ -39,24 +48,70 @@ export default function FridgeTracker() {
       !item.is_expired && getDaysUntilExpiration(item.expiration_date) <= 3
     );
     
-    if (expiringSoon.length > 0 && aiSuggestions.length === 0) {
+    console.log('[FridgeTracker] Items check:', {
+      totalItems: items.length,
+      expiringSoon: expiringSoon.length,
+      hasGenerated: hasGeneratedSuggestions.current,
+      isLoading: loadingSuggestions,
+      items: expiringSoon.map(i => ({ name: i.item_name, days: getDaysUntilExpiration(i.expiration_date) }))
+    });
+    
+    // Only generate suggestions once when we first detect expiring items
+    if (expiringSoon.length > 0 && !hasGeneratedSuggestions.current && !loadingSuggestions) {
+      console.log('[FridgeTracker] Starting AI generation for expiring items...');
+      hasGeneratedSuggestions.current = true;
       generateAISuggestions(expiringSoon);
+    } else if (expiringSoon.length === 0) {
+      // Reset flag if no expiring items
+      console.log('[FridgeTracker] No expiring items, resetting...');
+      hasGeneratedSuggestions.current = false;
+      setAiSuggestions([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items]);
 
   const generateAISuggestions = async (expiringItems: FridgeItem[]) => {
+    console.log('[FridgeTracker] generateAISuggestions called with:', expiringItems);
     setLoadingSuggestions(true);
+    
+    // Set a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.log('[FridgeTracker] AI generation timeout - setting fallback suggestions');
+      setAiSuggestions([{
+        title: 'Quick Use Recipe',
+        description: 'Use your expiring ingredients in a simple dish',
+        urgency: 'high',
+        itemsToUse: expiringItems.map(i => i.item_name),
+        quickTip: 'Cook these items within 24 hours to prevent waste'
+      }]);
+      setLoadingSuggestions(false);
+    }, 15000); // 15 second timeout
+    
     try {
       const itemsData = expiringItems.map(item => ({
         name: item.item_name,
         daysUntilExpiry: getDaysUntilExpiration(item.expiration_date)
       }));
       
+      console.log('[FridgeTracker] Calling fridgeAlertAI.suggestRecipesForExpiring...');
       const suggestions = await fridgeAlertAI.suggestRecipesForExpiring(itemsData);
+      console.log('[FridgeTracker] AI suggestions received:', suggestions);
+      
+      clearTimeout(timeoutId); // Clear timeout if successful
       setAiSuggestions(suggestions);
     } catch (error) {
-      console.error('Error generating AI suggestions:', error);
+      console.error('[FridgeTracker] Error generating AI suggestions:', error);
+      clearTimeout(timeoutId);
+      // Set fallback suggestions on error
+      setAiSuggestions([{
+        title: 'Use Expiring Items',
+        description: 'Create a meal with your expiring ingredients',
+        urgency: 'high',
+        itemsToUse: expiringItems.map(i => i.item_name),
+        quickTip: 'Try a stir-fry, soup, or casserole with these ingredients'
+      }]);
     } finally {
+      console.log('[FridgeTracker] Setting loadingSuggestions to false');
       setLoadingSuggestions(false);
     }
   };
@@ -118,14 +173,6 @@ export default function FridgeTracker() {
     if (!error && data) {
       setItems(items.map(item => item.id === itemId ? data : item));
     }
-  };
-
-  const getDaysUntilExpiration = (expirationDate: string) => {
-    const now = new Date();
-    const expiry = new Date(expirationDate);
-    const diffTime = expiry.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
   };
 
   const getExpirationStatus = (expirationDate: string) => {
@@ -220,44 +267,68 @@ export default function FridgeTracker() {
         </div>
       )}
 
-      {/* AI Recipe Suggestions for Expiring Items */}
-      {expiringSoon.length > 0 && (
-        <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-6 border border-orange-200">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-food-brown flex items-center">
-              <Sparkles className="h-5 w-5 mr-2 text-orange-500" />
-              AI Recipe Suggestions
-            </h3>
-            {loadingSuggestions && (
+      {/* AI Recipe Suggestions for Expiring Items - Always visible */}
+      <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-6 border border-orange-200">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-food-brown flex items-center">
+            <Sparkles className="h-5 w-5 mr-2 text-orange-500" />
+            Fridge Overflow Alerts
+          </h3>
+          {loadingSuggestions && (
+            <div className="flex items-center space-x-2">
               <Loader2 className="h-5 w-5 animate-spin text-orange-500" />
-            )}
-          </div>
-          
-          {aiSuggestions.length === 0 && !loadingSuggestions ? (
-            <p className="text-gray-600 text-sm">
-              Generate recipe ideas using your expiring ingredients...
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {aiSuggestions.map((suggestion, idx) => (
-                <div key={idx} className={`p-4 rounded-lg ${getUrgencyColor(suggestion.urgency)}`}>
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-bold text-food-brown">{suggestion.title}</h4>
-                    <span className="text-xs px-2 py-1 bg-white rounded-full font-medium capitalize">
-                      {suggestion.urgency} priority
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-700 mb-2">{suggestion.description}</p>
-                  <div className="text-xs text-gray-600 space-y-1">
-                    <p><strong>Use:</strong> {suggestion.itemsToUse.join(', ')}</p>
-                    <p><strong>Tip:</strong> {suggestion.quickTip}</p>
-                  </div>
-                </div>
-              ))}
+              <span className="text-sm text-gray-600">Analyzing...</span>
             </div>
           )}
         </div>
-      )}
+        
+        {expiringSoon.length === 0 ? (
+          <div className="text-center py-6">
+            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+            <p className="text-gray-700 font-medium mb-2">All Clear! 🎉</p>
+            <p className="text-sm text-gray-600">
+              No items expiring within the next 3 days. Add items with upcoming expiration dates to get AI-powered recipe suggestions.
+            </p>
+          </div>
+        ) : loadingSuggestions ? (
+          <div className="flex items-center justify-center py-8 text-gray-600">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-orange-500 mx-auto mb-2" />
+              <p className="text-sm">Creating recipe suggestions for your expiring items...</p>
+            </div>
+          </div>
+        ) : aiSuggestions.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="text-gray-600 text-sm mb-4">
+              Ready to generate recipe ideas for your {expiringSoon.length} expiring {expiringSoon.length === 1 ? 'item' : 'items'}.
+            </p>
+            <button
+              onClick={() => generateAISuggestions(expiringSoon)}
+              className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium"
+            >
+              Generate Recipe Ideas
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {aiSuggestions.map((suggestion, idx) => (
+              <div key={idx} className={`p-4 rounded-lg ${getUrgencyColor(suggestion.urgency)}`}>
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="font-bold text-food-brown">{suggestion.title}</h4>
+                  <span className="text-xs px-2 py-1 bg-white rounded-full font-medium capitalize">
+                    {suggestion.urgency} priority
+                  </span>
+                </div>
+                <p className="text-sm text-gray-700 mb-2">{suggestion.description}</p>
+                <div className="text-xs text-gray-600 space-y-1">
+                  <p><strong>Use:</strong> {suggestion.itemsToUse.join(', ')}</p>
+                  <p><strong>Tip:</strong> {suggestion.quickTip}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Add Item Form */}
       {showAddForm && (

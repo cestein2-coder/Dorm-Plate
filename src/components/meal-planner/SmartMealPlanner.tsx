@@ -17,18 +17,28 @@ const SmartMealPlanner: React.FC = () => {
 
     setLoading(true);
     setError('');
+    setMeals([]); // Clear previous results
     
     try {
+      console.log('Starting meal generation...');
       const ingredientList = ingredients
         .split(',')
         .map(i => i.trim())
         .filter(i => i.length > 0);
       
+      console.log('Ingredient list:', ingredientList);
       const suggestions = await mealPlannerAI.generateMealIdeas(ingredientList);
-      setMeals(suggestions);
-    } catch (err) {
+      console.log('Received suggestions:', suggestions);
+      
+      if (suggestions && suggestions.length > 0) {
+        setMeals(suggestions);
+        setError('');
+      } else {
+        setError('No meal ideas generated. Please try different ingredients.');
+      }
+    } catch (err: any) {
       console.error('Error generating meals:', err);
-      setError('Failed to generate meal ideas. Please try again.');
+      setError(`Unable to generate meal ideas: ${err?.message || 'Please check your API key and try again.'}`);
     } finally {
       setLoading(false);
     }

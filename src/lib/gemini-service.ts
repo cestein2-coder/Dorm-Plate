@@ -29,6 +29,7 @@ export interface MealSuggestion {
 export const mealPlannerAI = {
   async generateMealIdeas(ingredients: string[]): Promise<MealSuggestion[]> {
     if (!genAI) {
+      console.warn('Gemini API not initialized. Returning mock data.');
       // Return mock data if API key not available
       return [
         {
@@ -48,7 +49,8 @@ export const mealPlannerAI = {
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      console.log('Generating meal ideas with Gemini for ingredients:', ingredients);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       
       const prompt = `You are a helpful college meal planning assistant. Given these ingredients: ${ingredients.join(', ')}.
 
@@ -78,35 +80,76 @@ Important: Only respond with the JSON array, no additional text.`;
       const response = await result.response;
       const text = response.text();
       
-      // Try to parse JSON from response
-      const jsonMatch = text.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        const meals = JSON.parse(jsonMatch[0]);
-        return meals;
+      console.log('Gemini response received:', text.substring(0, 200));
+      
+      // Try to parse JSON from response - look for JSON code blocks too
+      let jsonText = text;
+      
+      // Remove markdown code blocks if present
+      if (text.includes('```json')) {
+        const match = text.match(/```json\s*([\s\S]*?)\s*```/);
+        if (match) {
+          jsonText = match[1];
+        }
+      } else if (text.includes('```')) {
+        const match = text.match(/```\s*([\s\S]*?)\s*```/);
+        if (match) {
+          jsonText = match[1];
+        }
       }
       
+      // Try to find JSON array
+      const jsonMatch = jsonText.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        try {
+          const meals = JSON.parse(jsonMatch[0]);
+          console.log('Successfully parsed meals:', meals.length);
+          return meals;
+        } catch (parseError) {
+          console.error('JSON parse error:', parseError);
+        }
+      }
+      
+      console.warn('Could not parse JSON from response, using fallback');
       // Fallback if parsing fails
       return [{
         name: 'Custom Recipe',
         description: 'A delicious meal with your ingredients',
         ingredients,
-        instructions: ['Follow your intuition!'],
+        instructions: ['Follow your intuition and combine these ingredients!'],
         prepTime: '20 mins',
         difficulty: 'medium'
       }];
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating meal ideas:', error);
-      throw error;
+      console.error('Error details:', error?.message, error?.status);
+      
+      // Return helpful fallback instead of throwing
+      return [{
+        name: 'Simple Mixed Dish',
+        description: `A quick meal using ${ingredients.slice(0, 3).join(', ')}`,
+        ingredients: ingredients.slice(0, 5),
+        instructions: [
+          'Prepare all ingredients',
+          'Cook according to your preference',
+          'Combine and season',
+          'Enjoy your meal!'
+        ],
+        prepTime: '15-20 mins',
+        difficulty: 'easy'
+      }];
     }
   },
 
   async analyzeFridgePhoto(imageBase64: string): Promise<string[]> {
     if (!genAI) {
+      console.warn('Gemini API not initialized for photo analysis');
       return ['milk', 'eggs', 'cheese', 'vegetables'];
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro-vision' });
+      console.log('Analyzing fridge photo with Gemini Vision');
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       
       const prompt = `Analyze this photo of a refrigerator or food items. List all the visible food ingredients you can identify. 
 Return ONLY a comma-separated list of ingredients, nothing else. Example: "milk, eggs, cheese, tomatoes, chicken"`;
@@ -124,16 +167,20 @@ Return ONLY a comma-separated list of ingredients, nothing else. Example: "milk,
       const response = await result.response;
       const text = response.text();
       
+      console.log('Photo analysis response:', text);
+      
       // Parse the comma-separated list
       const ingredients = text
         .split(',')
         .map(item => item.trim().toLowerCase())
         .filter(item => item.length > 0);
       
-      return ingredients;
-    } catch (error) {
+      return ingredients.length > 0 ? ingredients : ['milk', 'eggs', 'bread'];
+    } catch (error: any) {
       console.error('Error analyzing fridge photo:', error);
-      throw error;
+      console.error('Error details:', error?.message);
+      // Return default ingredients on error
+      return ['milk', 'eggs', 'cheese', 'vegetables'];
     }
   }
 };
@@ -163,7 +210,8 @@ export const fridgeAlertAI = {
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      console.log('Generating recipe suggestions for expiring items:', expiringItems);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       
       const itemsList = expiringItems
         .map(item => `${item.name} (expires in ${item.daysUntilExpiry} days)`)
@@ -195,11 +243,30 @@ Only respond with the JSON array.`;
       const response = await result.response;
       const text = response.text();
       
-      const jsonMatch = text.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+      console.log('Gemini API response for fridge alerts:', text);
+      
+      // Try to extract JSON from response (handle markdown code blocks)
+      let jsonText = text;
+      if (text.includes('```json')) {
+        const match = text.match(/```json\s*([\s\S]*?)\s*```/);
+        if (match) {
+          jsonText = match[1];
+        }
+      } else if (text.includes('```')) {
+        const match = text.match(/```\s*([\s\S]*?)\s*```/);
+        if (match) {
+          jsonText = match[1];
+        }
       }
       
+      const jsonMatch = jsonText.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const suggestions = JSON.parse(jsonMatch[0]);
+        console.log('Parsed suggestions:', suggestions);
+        return suggestions;
+      }
+      
+      console.warn('Could not parse JSON from response, returning fallback');
       return [{
         title: 'Use Soon',
         description: 'Quick meal with expiring items',
@@ -209,7 +276,14 @@ Only respond with the JSON array.`;
       }];
     } catch (error) {
       console.error('Error suggesting recipes for expiring items:', error);
-      throw error;
+      // Return fallback instead of throwing
+      return [{
+        title: 'Use Expiring Items',
+        description: 'Create a quick meal with your expiring ingredients',
+        urgency: 'high',
+        itemsToUse: expiringItems.map(i => i.name),
+        quickTip: 'Cook these items soon to prevent waste'
+      }];
     }
   },
 
@@ -219,7 +293,7 @@ Only respond with the JSON array.`;
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       
       const prompt = `Create a friendly, helpful reminder message for a college student about their ${itemName} that expires in ${daysUntilExpiry} days. 
 Keep it under 30 words, casual tone, and include a quick suggestion or tip. Just return the message text, nothing else.`;
@@ -262,7 +336,7 @@ export const wasteReductionAI = {
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       
       const prompt = `You are a sustainability coach for college students. Based on this data:
 - Items saved from waste: ${wasteData.itemsWasted}
@@ -336,7 +410,7 @@ export const communityAI = {
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       
       const prefText = userPreferences?.length 
         ? `User preferences: ${userPreferences.join(', ')}` 
@@ -428,7 +502,7 @@ export const diningSyncAI = {
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       
       const prompt = `You are a college meal plan advisor. Analyze this data:
 - Dining dollars remaining: $${data.diningDollars}
