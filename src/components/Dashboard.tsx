@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ChefHat, Bell, Calendar, TrendingDown, Flame, Utensils, LogOut, Menu, X, 
-  Camera, Sparkles, Users, Award, Leaf, DollarSign, Home, Refrigerator 
+  Sparkles, Users, Award, Leaf, DollarSign, Home, Refrigerator 
 } from 'lucide-react';
 import { dashboardHelpers } from '../lib/mvp-supabase';
 import { useAuth } from './auth/AuthProvider';
 import FridgeTracker from './fridge/FridgeTracker';
+import SmartMealPlanner from './meal-planner/SmartMealPlanner';
 
 type DashboardView = 'home' | 'meal-planner' | 'fridge' | 'dining-sync' | 'waste-dashboard' | 'community';
 
@@ -301,67 +302,7 @@ const Dashboard: React.FC = () => {
           )}
 
           {/* MEAL PLANNER VIEW */}
-          {currentView === 'meal-planner' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-3xl font-bold text-food-brown">Smart Meal Planner</h2>
-                  <p className="text-gray-600 mt-1">AI-powered meal suggestions from your ingredients</p>
-                </div>
-              </div>
-
-              {/* Photo Upload Section */}
-              <div className="bg-white rounded-xl shadow-md p-8 text-center">
-                <Camera className="h-16 w-16 text-food-orange mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-food-brown mb-2">Snap Your Fridge</h3>
-                <p className="text-gray-600 mb-6">
-                  Take a quick photo of your ingredients and let AI generate instant meal suggestions
-                </p>
-                <button className="bg-food-orange text-white px-8 py-3 rounded-lg font-semibold hover:bg-food-orange-dark transition-colors">
-                  📸 Take Photo
-                </button>
-              </div>
-
-              {/* Manual Entry Section */}
-              <div className="bg-white rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-semibold text-food-brown mb-4 flex items-center">
-                  <Sparkles className="h-5 w-5 mr-2 text-food-orange" />
-                  Or Enter Ingredients Manually
-                </h3>
-                <div className="space-y-4">
-                  <input
-                    type="text"
-                    placeholder="e.g., chicken, rice, broccoli..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-food-orange focus:border-transparent"
-                  />
-                  <button className="w-full bg-food-green text-white py-3 rounded-lg font-semibold hover:bg-food-green-dark transition-colors">
-                    Generate Meal Ideas ✨
-                  </button>
-                </div>
-              </div>
-
-              {/* Sample Suggestions */}
-              <div className="bg-gradient-to-r from-orange-50 to-green-50 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-food-brown mb-4">Suggested for You</h3>
-                <div className="space-y-3">
-                  {['Chicken Stir-Fry Bowl', 'Veggie Rice Medley', 'Quick Protein Wrap'].map((meal, idx) => (
-                    <div key={idx} className="bg-white rounded-lg p-4 flex items-center justify-between hover:shadow-md transition-shadow">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                          🍽️
-                        </div>
-                        <div>
-                          <p className="font-semibold text-food-brown">{meal}</p>
-                          <p className="text-sm text-gray-600">Ready in 15 mins</p>
-                        </div>
-                      </div>
-                      <button className="text-food-orange hover:text-food-orange-dark font-medium">View →</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+          {currentView === 'meal-planner' && <SmartMealPlanner />}
 
           {/* FRIDGE OVERFLOW ALERTS VIEW */}
           {currentView === 'fridge' && <FridgeTracker />}

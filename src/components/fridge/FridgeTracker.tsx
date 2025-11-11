@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Refrigerator, Plus, Trash2, AlertCircle, Clock, CheckCircle } from 'lucide-react';
+import { Refrigerator, Plus, Trash2, AlertCircle, Clock, CheckCircle, Sparkles, Loader2 } from 'lucide-react';
 import { fridgeItemHelpers } from '../../lib/mvp-supabase';
+import { fridgeAlertAI, RecipeSuggestion } from '../../lib/gemini-service';
 
 interface FridgeItem {
   id: string;
@@ -18,6 +19,8 @@ export default function FridgeTracker() {
   const [items, setItems] = useState<FridgeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<RecipeSuggestion[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [newItem, setNewItem] = useState({
     item_name: '',
     category: 'other' as const,
@@ -29,6 +32,34 @@ export default function FridgeTracker() {
   useEffect(() => {
     loadFridgeItems();
   }, []);
+
+  useEffect(() => {
+    // Auto-generate AI suggestions when items are expiring soon
+    const expiringSoon = items.filter(item => 
+      !item.is_expired && getDaysUntilExpiration(item.expiration_date) <= 3
+    );
+    
+    if (expiringSoon.length > 0 && aiSuggestions.length === 0) {
+      generateAISuggestions(expiringSoon);
+    }
+  }, [items]);
+
+  const generateAISuggestions = async (expiringItems: FridgeItem[]) => {
+    setLoadingSuggestions(true);
+    try {
+      const itemsData = expiringItems.map(item => ({
+        name: item.item_name,
+        daysUntilExpiry: getDaysUntilExpiration(item.expiration_date)
+      }));
+      
+      const suggestions = await fridgeAlertAI.suggestRecipesForExpiring(itemsData);
+      setAiSuggestions(suggestions);
+    } catch (error) {
+      console.error('Error generating AI suggestions:', error);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
 
   const loadFridgeItems = async () => {
     setLoading(true);
@@ -141,6 +172,15 @@ export default function FridgeTracker() {
   const activeItems = items.filter(item => !item.is_expired);
   const expiringSoon = activeItems.filter(item => getDaysUntilExpiration(item.expiration_date) <= 3);
 
+  const getUrgencyColor = (urgency: string) => {
+    switch (urgency) {
+      case 'high': return 'border-l-4 border-red-500 bg-red-50';
+      case 'medium': return 'border-l-4 border-orange-500 bg-orange-50';
+      case 'low': return 'border-l-4 border-yellow-500 bg-yellow-50';
+      default: return 'border-l-4 border-gray-500 bg-gray-50';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -177,6 +217,45 @@ export default function FridgeTracker() {
               </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* AI Recipe Suggestions for Expiring Items */}
+      {expiringSoon.length > 0 && (
+        <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-6 border border-orange-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-food-brown flex items-center">
+              <Sparkles className="h-5 w-5 mr-2 text-orange-500" />
+              AI Recipe Suggestions
+            </h3>
+            {loadingSuggestions && (
+              <Loader2 className="h-5 w-5 animate-spin text-orange-500" />
+            )}
+          </div>
+          
+          {aiSuggestions.length === 0 && !loadingSuggestions ? (
+            <p className="text-gray-600 text-sm">
+              Generate recipe ideas using your expiring ingredients...
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {aiSuggestions.map((suggestion, idx) => (
+                <div key={idx} className={`p-4 rounded-lg ${getUrgencyColor(suggestion.urgency)}`}>
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="font-bold text-food-brown">{suggestion.title}</h4>
+                    <span className="text-xs px-2 py-1 bg-white rounded-full font-medium capitalize">
+                      {suggestion.urgency} priority
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-2">{suggestion.description}</p>
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <p><strong>Use:</strong> {suggestion.itemsToUse.join(', ')}</p>
+                    <p><strong>Tip:</strong> {suggestion.quickTip}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
