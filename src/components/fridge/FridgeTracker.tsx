@@ -16,6 +16,7 @@ interface FridgeItem {
 }
 
 export default function FridgeTracker() {
+  console.log('[FridgeTracker] Component mounting...');
   const [items, setItems] = useState<FridgeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -39,6 +40,7 @@ export default function FridgeTracker() {
   };
 
   useEffect(() => {
+    console.log('[FridgeTracker] useEffect - calling loadFridgeItems');
     loadFridgeItems();
   }, []);
 
@@ -56,12 +58,9 @@ export default function FridgeTracker() {
       items: expiringSoon.map(i => ({ name: i.item_name, days: getDaysUntilExpiration(i.expiration_date) }))
     });
     
-    // Only generate suggestions once when we first detect expiring items
-    if (expiringSoon.length > 0 && !hasGeneratedSuggestions.current && !loadingSuggestions) {
-      console.log('[FridgeTracker] Starting AI generation for expiring items...');
-      hasGeneratedSuggestions.current = true;
-      generateAISuggestions(expiringSoon);
-    } else if (expiringSoon.length === 0) {
+    // Only auto-generate once when we first detect expiring items
+    // Removed auto-generation - let users trigger manually
+    if (expiringSoon.length === 0) {
       // Reset flag if no expiring items
       console.log('[FridgeTracker] No expiring items, resetting...');
       hasGeneratedSuggestions.current = false;
@@ -73,6 +72,7 @@ export default function FridgeTracker() {
   const generateAISuggestions = async (expiringItems: FridgeItem[]) => {
     console.log('[FridgeTracker] generateAISuggestions called with:', expiringItems);
     setLoadingSuggestions(true);
+    setAiSuggestions([]); // Clear previous suggestions
     
     // Set a timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
@@ -80,7 +80,7 @@ export default function FridgeTracker() {
       setAiSuggestions([{
         title: 'Quick Use Recipe',
         description: 'Use your expiring ingredients in a simple dish',
-        urgency: 'high',
+        urgency: 'high' as const,
         itemsToUse: expiringItems.map(i => i.item_name),
         quickTip: 'Cook these items within 24 hours to prevent waste'
       }]);
@@ -99,6 +99,7 @@ export default function FridgeTracker() {
       
       clearTimeout(timeoutId); // Clear timeout if successful
       setAiSuggestions(suggestions);
+      setLoadingSuggestions(false);
     } catch (error) {
       console.error('[FridgeTracker] Error generating AI suggestions:', error);
       clearTimeout(timeoutId);
@@ -106,23 +107,44 @@ export default function FridgeTracker() {
       setAiSuggestions([{
         title: 'Use Expiring Items',
         description: 'Create a meal with your expiring ingredients',
-        urgency: 'high',
+        urgency: 'high' as const,
         itemsToUse: expiringItems.map(i => i.item_name),
         quickTip: 'Try a stir-fry, soup, or casserole with these ingredients'
       }]);
-    } finally {
-      console.log('[FridgeTracker] Setting loadingSuggestions to false');
       setLoadingSuggestions(false);
     }
   };
 
   const loadFridgeItems = async () => {
+    console.log('[FridgeTracker] Loading fridge items...');
     setLoading(true);
-    const { data, error } = await fridgeItemHelpers.getFridgeItems();
-    if (data) {
-      setItems(data);
+    
+    // Add a timeout to prevent hanging forever
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Loading timeout')), 10000); // 10 second timeout
+    });
+    
+    try {
+      const loadPromise = fridgeItemHelpers.getFridgeItems();
+      const { data, error } = await Promise.race([loadPromise, timeoutPromise]) as any;
+      
+      if (error) {
+        console.error('[FridgeTracker] Error loading items:', error);
+      }
+      if (data) {
+        console.log('[FridgeTracker] Loaded items:', data);
+        setItems(data);
+      } else {
+        console.log('[FridgeTracker] No items found');
+        setItems([]);
+      }
+    } catch (err) {
+      console.error('[FridgeTracker] Exception loading items:', err);
+      setItems([]); // Set empty array on timeout/error so component renders
+    } finally {
+      setLoading(false);
+      console.log('[FridgeTracker] Loading complete');
     }
-    setLoading(false);
   };
 
   const handleAddItem = async (e: React.FormEvent) => {
@@ -207,17 +229,25 @@ export default function FridgeTracker() {
     return colors[category] || 'bg-gray-50 border-gray-200';
   };
 
+  console.log('[FridgeTracker] Rendering. Loading:', loading, 'Items:', items.length);
+
   if (loading) {
+    console.log('[FridgeTracker] Showing loading spinner');
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-food-orange"></div>
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-food-orange mb-4"></div>
+        <p className="text-gray-600">Loading your fridge items...</p>
       </div>
     );
   }
 
+  console.log('[FridgeTracker] Rendering main content');
+
   // Filter and sort items
   const activeItems = items.filter(item => !item.is_expired);
   const expiringSoon = activeItems.filter(item => getDaysUntilExpiration(item.expiration_date) <= 3);
+  
+  console.log('[FridgeTracker] Active items:', activeItems.length, 'Expiring soon:', expiringSoon.length);
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
@@ -303,7 +333,10 @@ export default function FridgeTracker() {
               Ready to generate recipe ideas for your {expiringSoon.length} expiring {expiringSoon.length === 1 ? 'item' : 'items'}.
             </p>
             <button
-              onClick={() => generateAISuggestions(expiringSoon)}
+              onClick={() => {
+                hasGeneratedSuggestions.current = false; // Reset flag to allow regeneration
+                generateAISuggestions(expiringSoon);
+              }}
               className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium"
             >
               Generate Recipe Ideas
@@ -326,6 +359,15 @@ export default function FridgeTracker() {
                 </div>
               </div>
             ))}
+            <button
+              onClick={() => {
+                hasGeneratedSuggestions.current = false; // Reset flag
+                generateAISuggestions(expiringSoon);
+              }}
+              className="w-full bg-orange-100 text-orange-700 px-4 py-2 rounded-lg hover:bg-orange-200 transition-colors font-medium text-sm"
+            >
+              Regenerate Ideas
+            </button>
           </div>
         )}
       </div>
