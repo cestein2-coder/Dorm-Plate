@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Camera, Sparkles, Loader2, Clock, ChefHat } from 'lucide-react';
+import { Camera, Sparkles, Loader2, Clock, ChefHat, Lock } from 'lucide-react';
 import { mealPlannerAI, MealSuggestion } from '../../lib/gemini-service';
+import { useAuth } from '../auth/AuthProvider';
 
 const SmartMealPlanner: React.FC = () => {
+  const { user } = useAuth();
   const [ingredients, setIngredients] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [meals, setMeals] = useState<MealSuggestion[]>([]);
@@ -10,6 +12,11 @@ const SmartMealPlanner: React.FC = () => {
   const [error, setError] = useState<string>('');
 
   const handleGenerateMeals = async () => {
+    if (!user) {
+      setError('⚠️ Please sign in to generate AI meal ideas');
+      return;
+    }
+    
     if (!ingredients.trim()) {
       setError('Please enter at least one ingredient');
       return;
@@ -47,6 +54,12 @@ const SmartMealPlanner: React.FC = () => {
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    if (!user) {
+      setError('⚠️ Please sign in to use the photo analysis feature');
+      event.target.value = ''; // Reset file input
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -111,13 +124,18 @@ const SmartMealPlanner: React.FC = () => {
             capture="environment"
             onChange={handlePhotoUpload}
             className="hidden"
-            disabled={loading}
+            disabled={loading || !user}
           />
-          <span className="bg-food-orange text-white px-8 py-3 rounded-lg font-semibold hover:bg-food-orange-dark transition-colors cursor-pointer inline-flex items-center space-x-2">
+          <span className={`bg-food-orange text-white px-8 py-3 rounded-lg font-semibold hover:bg-food-orange-dark transition-colors cursor-pointer inline-flex items-center space-x-2 ${(!user || loading) ? 'opacity-50 cursor-not-allowed' : ''}`}>
             {loading ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
                 <span>Analyzing...</span>
+              </>
+            ) : !user ? (
+              <>
+                <Lock className="h-5 w-5" />
+                <span>Sign In to Use Photo</span>
               </>
             ) : (
               <>
@@ -127,6 +145,11 @@ const SmartMealPlanner: React.FC = () => {
             )}
           </span>
         </label>
+        {!user && (
+          <p className="text-sm text-gray-600 mt-4">
+            🔒 Sign in required to use AI photo analysis
+          </p>
+        )}
       </div>
 
       {/* Manual Entry Section */}
@@ -156,13 +179,18 @@ const SmartMealPlanner: React.FC = () => {
 
           <button
             onClick={handleGenerateMeals}
-            disabled={loading || !ingredients.trim()}
+            disabled={loading || !ingredients.trim() || !user}
             className="w-full bg-food-green text-white py-3 rounded-lg font-semibold hover:bg-food-green-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
           >
             {loading ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
                 <span>Generating Ideas...</span>
+              </>
+            ) : !user ? (
+              <>
+                <Lock className="h-5 w-5" />
+                <span>Sign In to Generate Meals</span>
               </>
             ) : (
               <>
@@ -171,6 +199,11 @@ const SmartMealPlanner: React.FC = () => {
               </>
             )}
           </button>
+          {!user && (
+            <p className="text-xs text-center text-gray-600">
+              🔒 You need to sign in to use AI meal generation
+            </p>
+          )}
         </div>
       </div>
 

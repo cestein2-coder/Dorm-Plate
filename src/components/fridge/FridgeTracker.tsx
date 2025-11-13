@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Refrigerator, Plus, Trash2, AlertCircle, Clock, CheckCircle, Sparkles, Loader2, ClipboardList } from 'lucide-react';
+import { Refrigerator, Plus, Trash2, AlertCircle, Clock, CheckCircle, Sparkles, Loader2, ClipboardList, Lock } from 'lucide-react';
 import { fridgeItemHelpers } from '../../lib/mvp-supabase';
 import { fridgeAlertAI, RecipeSuggestion } from '../../lib/gemini-service';
+import { useAuth } from '../auth/AuthProvider';
 
 interface FridgeItem {
   id: string;
@@ -17,6 +18,7 @@ interface FridgeItem {
 
 export default function FridgeTracker() {
   console.log('[FridgeTracker] Component mounting...');
+  const { user } = useAuth();
   const [items, setItems] = useState<FridgeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -33,6 +35,8 @@ export default function FridgeTracker() {
     expiration_date: '',
     notes: ''
   });
+
+  console.log('[FridgeTracker] User authenticated:', !!user);
 
   const getDaysUntilExpiration = (expirationDate: string) => {
     const now = currentTime;
@@ -64,7 +68,13 @@ export default function FridgeTracker() {
 
   useEffect(() => {
     console.log('[FridgeTracker] useEffect - calling loadFridgeItems');
-    loadFridgeItems();
+    if (user) {
+      loadFridgeItems();
+    } else {
+      console.log('[FridgeTracker] No user, skipping load');
+      setLoading(false);
+      setItems([]);
+    }
     
     // Update time every minute for real-time countdown
     const interval = setInterval(() => {
@@ -72,7 +82,7 @@ export default function FridgeTracker() {
     }, 60000); // Update every minute
     
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     // Auto-generate AI suggestions when items are expiring soon
@@ -180,6 +190,11 @@ export default function FridgeTracker() {
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!user) {
+      alert('⚠️ Please sign in to add items to your fridge.\n\nYou need to be logged in to save and track your food items.');
+      return;
+    }
+    
     if (!newItem.item_name || !newItem.expiration_date) {
       alert('Please fill in item name and expiration date');
       return;
@@ -199,7 +214,7 @@ export default function FridgeTracker() {
 
       if (error) {
         console.error('[FridgeTracker] Error adding item:', error);
-        alert('Error adding item: ' + error.message + '\n\nMake sure you are signed in to add items.');
+        alert('Error adding item: ' + error.message + '\n\nPlease try again or contact support if the issue persists.');
         setAddingItem(false);
         return;
       }
@@ -222,7 +237,7 @@ export default function FridgeTracker() {
       }
     } catch (err) {
       console.error('[FridgeTracker] Exception adding item:', err);
-      alert('Failed to add item. Please make sure you are signed in.');
+      alert('Failed to add item. Please make sure you are signed in and try again.');
       setAddingItem(false);
     }
   };
@@ -438,18 +453,32 @@ export default function FridgeTracker() {
           </div>
         ) : aiSuggestions.length === 0 ? (
           <div className="text-center py-6">
-            <p className="text-gray-600 text-sm mb-4">
-              Ready to generate recipe ideas for your {expiringSoon.length} expiring {expiringSoon.length === 1 ? 'item' : 'items'}.
-            </p>
-            <button
-              onClick={() => {
-                hasGeneratedSuggestions.current = false; // Reset flag to allow regeneration
-                generateAISuggestions(expiringSoon);
-              }}
-              className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium"
-            >
-              Generate Recipe Ideas
-            </button>
+            {user ? (
+              <>
+                <p className="text-gray-600 text-sm mb-4">
+                  Ready to generate recipe ideas for your {expiringSoon.length} expiring {expiringSoon.length === 1 ? 'item' : 'items'}.
+                </p>
+                <button
+                  onClick={() => {
+                    hasGeneratedSuggestions.current = false; // Reset flag to allow regeneration
+                    generateAISuggestions(expiringSoon);
+                  }}
+                  className="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition-colors font-medium"
+                >
+                  Generate Recipe Ideas
+                </button>
+              </>
+            ) : (
+              <>
+                <Lock className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600 text-sm mb-2">
+                  Sign in to generate AI-powered recipe ideas
+                </p>
+                <p className="text-xs text-gray-500">
+                  Get personalized suggestions to use your expiring items
+                </p>
+              </>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
@@ -592,7 +621,34 @@ export default function FridgeTracker() {
       )}
 
       {/* Items List */}
-      {activeItems.length === 0 ? (
+      {!user ? (
+        <div className="text-center py-16 bg-gradient-to-br from-orange-50 to-yellow-50 rounded-xl border-2 border-orange-200">
+          <div className="bg-white w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <Lock className="h-10 w-10 text-orange-500" />
+          </div>
+          <h3 className="text-2xl font-bold text-food-brown mb-3">Sign In Required</h3>
+          <p className="text-gray-700 mb-2 max-w-md mx-auto">
+            You need to be signed in to track your fridge items and reduce food waste.
+          </p>
+          <p className="text-sm text-gray-600 mb-6 max-w-md mx-auto">
+            Create a free account to access smart meal planning, expiration tracking, and AI-powered recipe suggestions.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              <span>Track food expiration</span>
+            </div>
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              <span>Get AI recipe ideas</span>
+            </div>
+            <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              <span>Reduce waste</span>
+            </div>
+          </div>
+        </div>
+      ) : activeItems.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
           <Refrigerator className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-700 mb-2">Your fridge is empty</h3>
