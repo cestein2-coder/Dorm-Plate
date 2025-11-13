@@ -190,6 +190,9 @@ export default function FridgeTracker() {
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('[FridgeTracker] handleAddItem called');
+    console.log('[FridgeTracker] User:', user ? 'Authenticated' : 'Not authenticated');
+    
     if (!user) {
       alert('⚠️ Please sign in to add items to your fridge.\n\nYou need to be logged in to save and track your food items.');
       return;
@@ -201,16 +204,31 @@ export default function FridgeTracker() {
     }
 
     console.log('[FridgeTracker] Adding item:', newItem);
+    console.log('[FridgeTracker] Setting addingItem to true');
     setAddingItem(true);
 
     try {
-      const { data, error } = await fridgeItemHelpers.createFridgeItem({
+      console.log('[FridgeTracker] Creating timeout promise...');
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          console.log('[FridgeTracker] TIMEOUT REACHED');
+          reject(new Error('Request timeout - please check your connection and try again'));
+        }, 10000);
+      });
+
+      console.log('[FridgeTracker] Calling fridgeItemHelpers.createFridgeItem...');
+      const createPromise = fridgeItemHelpers.createFridgeItem({
         item_name: newItem.item_name,
         category: newItem.category,
         quantity: newItem.quantity || undefined,
         expiration_date: newItem.expiration_date,
         notes: newItem.notes || undefined
       });
+
+      console.log('[FridgeTracker] Waiting for Promise.race...');
+      const { data, error } = await Promise.race([createPromise, timeoutPromise]) as any;
+      console.log('[FridgeTracker] Promise.race completed. Data:', data, 'Error:', error);
 
       if (error) {
         console.error('[FridgeTracker] Error adding item:', error);
@@ -244,9 +262,10 @@ export default function FridgeTracker() {
         const timeLeft = getTimeUntilExpiration(data.expiration_date);
         alert(`✓ Item added successfully!\n\n"${data.item_name}" expires in: ${timeLeft}\n\n${daysUntil <= 3 ? '⚠️ This item is expiring soon!' : '✅ Track it in your fridge list'}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('[FridgeTracker] Exception adding item:', err);
-      alert('Failed to add item. Please make sure you are signed in and try again.');
+      const errorMessage = err?.message || 'Unknown error occurred';
+      alert(`Failed to add item: ${errorMessage}\n\nPlease check:\n• You are signed in\n• Your internet connection\n• Try refreshing the page`);
       setAddingItem(false);
     }
   };
