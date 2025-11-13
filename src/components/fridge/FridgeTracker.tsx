@@ -207,6 +207,32 @@ export default function FridgeTracker() {
     console.log('[FridgeTracker] Setting addingItem to true');
     setAddingItem(true);
 
+    // Create a temporary item to show immediately in the UI
+    const tempItem: FridgeItem = {
+      id: `temp-${Date.now()}`,
+      item_name: newItem.item_name,
+      category: newItem.category,
+      quantity: newItem.quantity || undefined,
+      expiration_date: newItem.expiration_date,
+      is_expired: false,
+      notes: newItem.notes || undefined,
+      created_at: new Date().toISOString()
+    };
+    
+    // Add to UI immediately
+    console.log('[FridgeTracker] Adding temporary item to UI:', tempItem);
+    setItems([...items, tempItem]);
+    
+    // Reset form and close immediately for better UX
+    setNewItem({
+      item_name: '',
+      category: 'other',
+      quantity: '',
+      expiration_date: '',
+      notes: ''
+    });
+    setShowAddForm(false);
+
     try {
       console.log('[FridgeTracker] Creating timeout promise...');
       // Add timeout to prevent hanging
@@ -232,15 +258,21 @@ export default function FridgeTracker() {
 
       if (error) {
         console.error('[FridgeTracker] Error adding item:', error);
-        alert('Error adding item: ' + error.message + '\n\nPlease try again or contact support if the issue persists.');
+        // Remove temp item on error
+        setItems(prevItems => prevItems.filter(item => !item.id.startsWith('temp-')));
+        alert('Error adding item: ' + error.message + '\n\nThe item was not saved. Please try again.');
         setAddingItem(false);
         return;
       }
 
       if (data) {
         console.log('[FridgeTracker] Item added successfully:', data);
-        const updatedItems = [...items, data];
-        setItems(updatedItems);
+        
+        // Replace temp item with real item from database
+        setItems(prevItems => {
+          const filtered = prevItems.filter(item => !item.id.startsWith('temp-'));
+          return [...filtered, data];
+        });
         
         // Auto-show produce list if the added item is produce and expiring soon
         const daysUntil = getDaysUntilExpiration(data.expiration_date);
@@ -248,14 +280,6 @@ export default function FridgeTracker() {
           setShowProduceList(true);
         }
         
-        setNewItem({
-          item_name: '',
-          category: 'other',
-          quantity: '',
-          expiration_date: '',
-          notes: ''
-        });
-        setShowAddForm(false);
         setAddingItem(false);
         
         // Show success message with timer info
@@ -274,11 +298,18 @@ export default function FridgeTracker() {
             itemsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
         }, 500);
+      } else {
+        // If no data returned, remove the temp item
+        console.log('[FridgeTracker] No data returned, removing temp item');
+        setItems(prevItems => prevItems.filter(item => !item.id.startsWith('temp-')));
+        setAddingItem(false);
       }
     } catch (err: any) {
       console.error('[FridgeTracker] Exception adding item:', err);
+      // Remove temp item on exception
+      setItems(prevItems => prevItems.filter(item => !item.id.startsWith('temp-')));
       const errorMessage = err?.message || 'Unknown error occurred';
-      alert(`Failed to add item: ${errorMessage}\n\nPlease check:\n• You are signed in\n• Your internet connection\n• Try refreshing the page`);
+      alert(`Failed to add item: ${errorMessage}\n\nThe item was not saved.\n\nPlease check:\n• You are signed in\n• Your internet connection\n• Try refreshing the page`);
       setAddingItem(false);
     }
   };
