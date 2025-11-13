@@ -260,7 +260,20 @@ export default function FridgeTracker() {
         
         // Show success message with timer info
         const timeLeft = getTimeUntilExpiration(data.expiration_date);
-        alert(`✓ Item added successfully!\n\n"${data.item_name}" expires in: ${timeLeft}\n\n${daysUntil <= 3 ? '⚠️ This item is expiring soon!' : '✅ Track it in your fridge list'}`);
+        const message = `✅ SUCCESS! Item Added to Your Fridge\n\n` +
+                       `📦 Item: "${data.item_name}"\n` +
+                       `⏰ Expires in: ${timeLeft}\n` +
+                       `📁 Category: ${data.category}\n\n` +
+                       `${daysUntil <= 3 ? '⚠️ WARNING: This item is expiring soon!\nCheck the "Expiring Items" list below.' : '✅ Item added to your fridge list below.\nScroll down to see all your items.'}`;
+        alert(message);
+        
+        // Scroll to the items list
+        setTimeout(() => {
+          const itemsList = document.querySelector('[data-fridge-items-list]');
+          if (itemsList) {
+            itemsList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 500);
       }
     } catch (err: any) {
       console.error('[FridgeTracker] Exception adding item:', err);
@@ -775,11 +788,34 @@ export default function FridgeTracker() {
             <span>Add Your First Item</span>
           </button>
           <p className="text-xs text-gray-500 mt-4">
-            💡 Make sure you're signed in to save your items
+            💡 Items will appear here once added
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <>
+          {/* My Fridge Items Header */}
+          <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-4 border-2 border-blue-200 mb-4" data-fridge-items-list>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="bg-blue-500 p-2 rounded-lg">
+                  <Refrigerator className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-food-brown">My Fridge Items</h3>
+                  <p className="text-sm text-gray-600">
+                    {activeItems.length} {activeItems.length === 1 ? 'item' : 'items'} in your fridge
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-blue-600">{activeItems.length}</div>
+                <div className="text-xs text-gray-600">Total Items</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Items Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {activeItems.map((item) => {
             const status = getExpirationStatus(item.expiration_date);
             const StatusIcon = status.icon;
@@ -829,7 +865,8 @@ export default function FridgeTracker() {
               </div>
             );
           })}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
