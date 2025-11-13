@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Refrigerator, Plus, Trash2, AlertCircle, Clock, CheckCircle, Sparkles, Loader2 } from 'lucide-react';
+import { Refrigerator, Plus, Trash2, AlertCircle, Clock, CheckCircle, Sparkles, Loader2, ClipboardList } from 'lucide-react';
 import { fridgeItemHelpers } from '../../lib/mvp-supabase';
 import { fridgeAlertAI, RecipeSuggestion } from '../../lib/gemini-service';
 
 interface FridgeItem {
   id: string;
   item_name: string;
-  category: 'dairy' | 'meat' | 'produce' | 'leftovers' | 'beverages' | 'other';
+  category: 'dairy' | 'meat' | 'produce' | 'leftovers' | 'beverages' | 'meals' | 'other';
   quantity?: string;
   purchase_date?: string;
   expiration_date: string;
@@ -23,6 +23,7 @@ export default function FridgeTracker() {
   const [aiSuggestions, setAiSuggestions] = useState<RecipeSuggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const hasGeneratedSuggestions = useRef(false);
+  const [showProduceList, setShowProduceList] = useState(false);
   const [newItem, setNewItem] = useState({
     item_name: '',
     category: 'other' as const,
@@ -246,8 +247,9 @@ export default function FridgeTracker() {
   // Filter and sort items
   const activeItems = items.filter(item => !item.is_expired);
   const expiringSoon = activeItems.filter(item => getDaysUntilExpiration(item.expiration_date) <= 3);
+  const expiringProduce = expiringSoon.filter(item => item.category === 'produce');
   
-  console.log('[FridgeTracker] Active items:', activeItems.length, 'Expiring soon:', expiringSoon.length);
+  console.log('[FridgeTracker] Active items:', activeItems.length, 'Expiring soon:', expiringSoon.length, 'Expiring produce:', expiringProduce.length);
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
@@ -294,6 +296,68 @@ export default function FridgeTracker() {
               </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Expiring Produce List */}
+      {expiringProduce.length > 0 && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-food-brown flex items-center">
+              <ClipboardList className="h-5 w-5 mr-2 text-green-600" />
+              Expiring Produce List
+            </h3>
+            <button
+              onClick={() => setShowProduceList(!showProduceList)}
+              className="text-sm text-green-600 hover:text-green-700 font-medium"
+            >
+              {showProduceList ? 'Hide' : 'Show'} ({expiringProduce.length})
+            </button>
+          </div>
+          
+          {showProduceList && (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-700 mb-3">
+                Use these produce items soon to prevent waste and maintain freshness:
+              </p>
+              <div className="bg-white rounded-lg divide-y divide-gray-200">
+                {expiringProduce.map((item) => {
+                  const status = getExpirationStatus(item.expiration_date);
+                  const StatusIcon = status.icon;
+                  
+                  return (
+                    <div key={item.id} className="p-4 flex items-center justify-between hover:bg-gray-50">
+                      <div className="flex items-center space-x-3 flex-1">
+                        <span className="text-2xl">🥬</span>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-food-brown">{item.item_name}</h4>
+                          {item.quantity && (
+                            <p className="text-xs text-gray-600">Quantity: {item.quantity}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${status.color}`}>
+                          <StatusIcon className="h-3 w-3" />
+                          <span>{status.text}</span>
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div className="mt-4 bg-white rounded-lg p-4 border-2 border-dashed border-green-300">
+                <p className="text-sm font-semibold text-food-brown mb-2">💡 Quick Tips:</p>
+                <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                  <li>Cook produce items in a stir-fry or soup</li>
+                  <li>Blend them into smoothies or sauces</li>
+                  <li>Share with neighbors or friends if you can't use them</li>
+                  <li>Generate meal ideas below using these items</li>
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -405,8 +469,9 @@ export default function FridgeTracker() {
                   <option value="meat">🥩 Meat</option>
                   <option value="produce">🥬 Produce</option>
                   <option value="leftovers">🍱 Leftovers</option>
+                  <option value="meals">🍽️ Meals</option>
                   <option value="beverages">🥤 Beverages</option>
-                  <option value="other">🍽️ Other</option>
+                  <option value="other">📦 Other</option>
                 </select>
               </div>
 
