@@ -221,7 +221,15 @@ export default function FridgeTracker() {
 
       if (data) {
         console.log('[FridgeTracker] Item added successfully:', data);
-        setItems([...items, data]);
+        const updatedItems = [...items, data];
+        setItems(updatedItems);
+        
+        // Auto-show produce list if the added item is produce and expiring soon
+        const daysUntil = getDaysUntilExpiration(data.expiration_date);
+        if (data.category === 'produce' && daysUntil <= 3) {
+          setShowProduceList(true);
+        }
+        
         setNewItem({
           item_name: '',
           category: 'other',
@@ -232,8 +240,9 @@ export default function FridgeTracker() {
         setShowAddForm(false);
         setAddingItem(false);
         
-        // Show success message
-        alert('✓ Item added successfully to your fridge!');
+        // Show success message with timer info
+        const timeLeft = getTimeUntilExpiration(data.expiration_date);
+        alert(`✓ Item added successfully!\n\n"${data.item_name}" expires in: ${timeLeft}\n\n${daysUntil <= 3 ? '⚠️ This item is expiring soon!' : '✅ Track it in your fridge list'}`);
       }
     } catch (err) {
       console.error('[FridgeTracker] Exception adding item:', err);
@@ -354,6 +363,92 @@ export default function FridgeTracker() {
               <p className="text-sm text-orange-700 mt-1">
                 Use {expiringSoon.length === 1 ? 'it' : 'them'} soon to avoid food waste
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Expiring Items List with Live Timer */}
+      {expiringSoon.length > 0 && (
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-orange-300 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-food-brown flex items-center">
+              <Clock className="h-6 w-6 mr-2 text-orange-600" />
+              Expiring Items - Live Countdown
+            </h3>
+            <div className="bg-white px-3 py-1 rounded-full">
+              <span className="text-sm font-semibold text-orange-600">{expiringSoon.length} items</span>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <p className="text-sm text-gray-700 mb-3">
+              ⏰ Real-time countdown for items expiring within 3 days:
+            </p>
+            <div className="bg-white rounded-lg divide-y divide-gray-200 shadow-md">
+              {expiringSoon.map((item) => {
+                const status = getExpirationStatus(item.expiration_date);
+                const StatusIcon = status.icon;
+                const timeLeft = getTimeUntilExpiration(item.expiration_date);
+                
+                return (
+                  <div key={item.id} className="p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3 flex-1">
+                        <span className="text-3xl">{getCategoryIcon(item.category)}</span>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-food-brown text-lg">{item.item_name}</h4>
+                          <div className="flex items-center space-x-2 text-xs text-gray-600 mt-1">
+                            <span className="bg-gray-100 px-2 py-1 rounded capitalize">{item.category}</span>
+                            {item.quantity && (
+                              <span className="bg-blue-50 px-2 py-1 rounded">{item.quantity}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right ml-4">
+                        <div className={`text-2xl font-mono font-bold mb-1 ${
+                          getDaysUntilExpiration(item.expiration_date) === 0 ? 'text-red-600' :
+                          getDaysUntilExpiration(item.expiration_date) === 1 ? 'text-orange-600' :
+                          'text-yellow-600'
+                        }`}>
+                          {timeLeft}
+                        </div>
+                        <div className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-semibold ${status.color}`}>
+                          <StatusIcon className="h-3 w-3" />
+                          <span>{status.text}</span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {new Date(item.expiration_date).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                    {item.notes && (
+                      <p className="text-xs text-gray-600 mt-2 ml-12 italic bg-gray-50 p-2 rounded">
+                        📝 {item.notes}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="mt-4 bg-white rounded-lg p-4 border-2 border-dashed border-orange-300">
+              <p className="text-sm font-semibold text-food-brown mb-2 flex items-center">
+                <Sparkles className="h-4 w-4 mr-1" />
+                Action Required:
+              </p>
+              <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                <li>Use these items today or tomorrow</li>
+                <li>Cook a meal combining multiple expiring items</li>
+                <li>Generate AI recipe ideas below</li>
+                <li>Share with friends if you can't use them</li>
+              </ul>
             </div>
           </div>
         </div>
