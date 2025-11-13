@@ -24,6 +24,8 @@ export default function FridgeTracker() {
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const hasGeneratedSuggestions = useRef(false);
   const [showProduceList, setShowProduceList] = useState(false);
+  const [addingItem, setAddingItem] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [newItem, setNewItem] = useState({
     item_name: '',
     category: 'other' as const,
@@ -33,16 +35,43 @@ export default function FridgeTracker() {
   });
 
   const getDaysUntilExpiration = (expirationDate: string) => {
-    const now = new Date();
+    const now = currentTime;
     const expiry = new Date(expirationDate);
     const diffTime = expiry.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
 
+  const getTimeUntilExpiration = (expirationDate: string) => {
+    const now = currentTime;
+    const expiry = new Date(expirationDate);
+    const diffTime = expiry.getTime() - now.getTime();
+    
+    if (diffTime < 0) return 'Expired';
+    
+    const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (days > 0) {
+      return `${days}d ${hours}h`;
+    } else if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else {
+      return `${minutes}m`;
+    }
+  };
+
   useEffect(() => {
     console.log('[FridgeTracker] useEffect - calling loadFridgeItems');
     loadFridgeItems();
+    
+    // Update time every minute for real-time countdown
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+    
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -156,29 +185,45 @@ export default function FridgeTracker() {
       return;
     }
 
-    const { data, error } = await fridgeItemHelpers.createFridgeItem({
-      item_name: newItem.item_name,
-      category: newItem.category,
-      quantity: newItem.quantity || undefined,
-      expiration_date: newItem.expiration_date,
-      notes: newItem.notes || undefined
-    });
+    console.log('[FridgeTracker] Adding item:', newItem);
+    setAddingItem(true);
 
-    if (error) {
-      alert('Error adding item: ' + error.message);
-      return;
-    }
-
-    if (data) {
-      setItems([...items, data]);
-      setNewItem({
-        item_name: '',
-        category: 'other',
-        quantity: '',
-        expiration_date: '',
-        notes: ''
+    try {
+      const { data, error } = await fridgeItemHelpers.createFridgeItem({
+        item_name: newItem.item_name,
+        category: newItem.category,
+        quantity: newItem.quantity || undefined,
+        expiration_date: newItem.expiration_date,
+        notes: newItem.notes || undefined
       });
-      setShowAddForm(false);
+
+      if (error) {
+        console.error('[FridgeTracker] Error adding item:', error);
+        alert('Error adding item: ' + error.message + '\n\nMake sure you are signed in to add items.');
+        setAddingItem(false);
+        return;
+      }
+
+      if (data) {
+        console.log('[FridgeTracker] Item added successfully:', data);
+        setItems([...items, data]);
+        setNewItem({
+          item_name: '',
+          category: 'other',
+          quantity: '',
+          expiration_date: '',
+          notes: ''
+        });
+        setShowAddForm(false);
+        setAddingItem(false);
+        
+        // Show success message
+        alert('✓ Item added successfully to your fridge!');
+      }
+    } catch (err) {
+      console.error('[FridgeTracker] Exception adding item:', err);
+      alert('Failed to add item. Please make sure you are signed in.');
+      setAddingItem(false);
     }
   };
 
@@ -519,15 +564,27 @@ export default function FridgeTracker() {
               <button
                 type="button"
                 onClick={() => setShowAddForm(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                disabled={addingItem}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-food-orange text-white rounded-lg hover:bg-food-orange-dark transition-colors"
+                disabled={addingItem}
+                className="px-4 py-2 bg-food-orange text-white rounded-lg hover:bg-food-orange-dark transition-colors disabled:opacity-50 flex items-center space-x-2"
               >
-                Add Item
+                {addingItem ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Adding...</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4" />
+                    <span>Add Item</span>
+                  </>
+                )}
               </button>
             </div>
           </form>
@@ -536,10 +593,20 @@ export default function FridgeTracker() {
 
       {/* Items List */}
       {activeItems.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <Refrigerator className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-600">Your fridge is empty</p>
-          <p className="text-sm text-gray-500 mt-1">Add items to track their expiration dates</p>
+        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <Refrigerator className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">Your fridge is empty</h3>
+          <p className="text-sm text-gray-600 mb-4">Start tracking your food items to reduce waste!</p>
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="bg-food-orange text-white px-6 py-3 rounded-lg hover:bg-food-orange-dark transition-colors font-medium inline-flex items-center space-x-2"
+          >
+            <Plus className="h-5 w-5" />
+            <span>Add Your First Item</span>
+          </button>
+          <p className="text-xs text-gray-500 mt-4">
+            💡 Make sure you're signed in to save your items
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -576,9 +643,14 @@ export default function FridgeTracker() {
                     <StatusIcon className="h-4 w-4" />
                     <span className="text-sm font-medium">{status.text}</span>
                   </div>
-                  <span className="text-xs">
-                    {new Date(item.expiration_date).toLocaleDateString()}
-                  </span>
+                  <div className="text-right">
+                    <div className="text-xs font-mono font-semibold">
+                      {getTimeUntilExpiration(item.expiration_date)}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {new Date(item.expiration_date).toLocaleDateString()}
+                    </div>
+                  </div>
                 </div>
 
                 {item.notes && (
