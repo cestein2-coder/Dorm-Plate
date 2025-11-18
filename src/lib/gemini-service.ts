@@ -60,29 +60,33 @@ export const mealPlannerAI = {
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
       console.log('📦 Model created:', model);
       
-      const prompt = `You are a helpful college meal planning assistant. Given these ingredients: ${ingredients.join(', ')}.
+      const prompt = `You are a creative chef and college meal planning assistant. I have these ingredients available: ${ingredients.join(', ')}.
 
-Please suggest 3 quick, budget-friendly meal ideas that college students can make in their dorm. For each meal, provide:
-1. Name of the dish
-2. Brief description (1 sentence)
-3. List of ingredients needed (use only from the provided list)
-4. Step-by-step instructions (keep it simple, 4-6 steps)
-5. Estimated prep time
-6. Difficulty level (easy/medium/hard)
+Create 3 DIFFERENT and CREATIVE meal recipes using combinations of these ingredients. Each recipe should:
+- Have a creative, appealing dish name (not just "Ingredient Mix")
+- Use 2-5 of the provided ingredients in interesting combinations
+- Be practical for college students (quick, simple, budget-friendly)
+- Include specific cooking instructions (not generic steps)
+- Be a real, recognizable dish
 
-Format your response as JSON array with this structure:
+Examples of good recipes:
+- "Honey Garlic Chicken Stir-Fry" (not just "Chicken Mix")
+- "Creamy Tomato Pasta" (not just "Pasta Dish")
+- "Veggie Fried Rice" (not just "Rice Bowl")
+
+Return ONLY a JSON array in this exact format (no markdown, no extra text):
 [
   {
-    "name": "Meal Name",
-    "description": "Brief description",
-    "ingredients": ["ingredient1", "ingredient2"],
-    "instructions": ["step1", "step2"],
+    "name": "Creative Dish Name Here",
+    "description": "One sentence describing what makes this dish delicious",
+    "ingredients": ["ingredient1 with amount", "ingredient2 with amount"],
+    "instructions": ["Specific step 1", "Specific step 2", "etc"],
     "prepTime": "15 mins",
     "difficulty": "easy"
   }
 ]
 
-Important: Only respond with the JSON array, no additional text.`;
+Be creative! Think like a real chef, not just someone listing ingredients.`;
 
       console.log('📝 Sending prompt to Gemini...');
       const result = await model.generateContent(prompt);
