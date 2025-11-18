@@ -2,8 +2,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
+console.log('🔑 Gemini API Key status:', apiKey ? `Loaded (${apiKey.substring(0, 10)}...)` : 'NOT FOUND');
+
 if (!apiKey) {
-  console.warn('VITE_GEMINI_API_KEY not found. AI features will be limited.');
+  console.error('❌ VITE_GEMINI_API_KEY not found. AI features will be limited.');
+} else {
+  console.log('✅ Gemini API initialized successfully');
 }
 
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
@@ -28,8 +32,11 @@ export interface MealSuggestion {
 
 export const mealPlannerAI = {
   async generateMealIdeas(ingredients: string[]): Promise<MealSuggestion[]> {
+    console.log('🍳 generateMealIdeas called with:', ingredients);
+    console.log('🔍 genAI initialized?', genAI ? 'YES' : 'NO');
+    
     if (!genAI) {
-      console.warn('Gemini API not initialized. Returning mock data.');
+      console.error('❌ Gemini API not initialized. Returning mock data.');
       // Return mock data if API key not available
       return [
         {
@@ -49,8 +56,9 @@ export const mealPlannerAI = {
     }
 
     try {
-      console.log('Generating meal ideas with Gemini for ingredients:', ingredients);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      console.log('🚀 Generating meal ideas with Gemini for ingredients:', ingredients);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      console.log('📦 Model created:', model);
       
       const prompt = `You are a helpful college meal planning assistant. Given these ingredients: ${ingredients.join(', ')}.
 
@@ -76,11 +84,15 @@ Format your response as JSON array with this structure:
 
 Important: Only respond with the JSON array, no additional text.`;
 
+      console.log('📝 Sending prompt to Gemini...');
       const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      console.log('📥 Received result from Gemini:', result);
       
-      console.log('Gemini response received:', text.substring(0, 200));
+      const response = await result.response;
+      console.log('📄 Response object:', response);
+      
+      const text = response.text();
+      console.log('📃 Full Gemini response text:', text);
       
       // Try to parse JSON from response - look for JSON code blocks too
       let jsonText = text;
@@ -149,7 +161,7 @@ Important: Only respond with the JSON array, no additional text.`;
 
     try {
       console.log('Analyzing fridge photo with Gemini Vision');
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
       
       const prompt = `Analyze this photo of a refrigerator or food items. List all the visible food ingredients you can identify. 
 Return ONLY a comma-separated list of ingredients, nothing else. Example: "milk, eggs, cheese, tomatoes, chicken"`;
@@ -211,7 +223,7 @@ export const fridgeAlertAI = {
 
     try {
       console.log('Generating recipe suggestions for expiring items:', expiringItems);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
       
       const itemsList = expiringItems
         .map(item => `${item.name} (expires in ${item.daysUntilExpiry} days)`)
@@ -293,7 +305,7 @@ Only respond with the JSON array.`;
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
       
       const prompt = `Create a friendly, helpful reminder message for a college student about their ${itemName} that expires in ${daysUntilExpiry} days. 
 Keep it under 30 words, casual tone, and include a quick suggestion or tip. Just return the message text, nothing else.`;
@@ -336,7 +348,7 @@ export const wasteReductionAI = {
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
       
       const prompt = `You are a sustainability coach for college students. Based on this data:
 - Items saved from waste: ${wasteData.itemsWasted}
@@ -410,7 +422,7 @@ export const communityAI = {
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
       
       const prefText = userPreferences?.length 
         ? `User preferences: ${userPreferences.join(', ')}` 
@@ -502,7 +514,7 @@ export const diningSyncAI = {
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
       
       const prompt = `You are a college meal plan advisor. Analyze this data:
 - Dining dollars remaining: $${data.diningDollars}
