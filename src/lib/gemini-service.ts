@@ -97,36 +97,47 @@ Be creative! Think like a real chef, not just someone listing ingredients.`;
       
       const text = response.text();
       console.log('📃 Full Gemini response text:', text);
+      console.log('📏 Response length:', text.length);
       
       // Try to parse JSON from response - look for JSON code blocks too
       let jsonText = text;
       
       // Remove markdown code blocks if present
       if (text.includes('```json')) {
+        console.log('🔍 Found JSON code block with ```json');
         const match = text.match(/```json\s*([\s\S]*?)\s*```/);
         if (match) {
           jsonText = match[1];
+          console.log('✂️ Extracted JSON from code block');
         }
       } else if (text.includes('```')) {
+        console.log('🔍 Found generic code block with ```');
         const match = text.match(/```\s*([\s\S]*?)\s*```/);
         if (match) {
           jsonText = match[1];
+          console.log('✂️ Extracted text from code block');
         }
       }
       
       // Try to find JSON array
       const jsonMatch = jsonText.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
+        console.log('🎯 Found JSON array in response');
         try {
           const meals = JSON.parse(jsonMatch[0]);
-          console.log('Successfully parsed meals:', meals.length);
+          console.log('✅ Successfully parsed meals:', meals.length, 'recipes');
+          console.log('📋 Meal names:', meals.map((m: any) => m.name));
           return meals;
         } catch (parseError) {
-          console.error('JSON parse error:', parseError);
+          console.error('❌ JSON parse error:', parseError);
+          console.error('🔍 Attempted to parse:', jsonMatch[0].substring(0, 200));
         }
+      } else {
+        console.warn('⚠️ No JSON array found in response');
+        console.log('🔍 Text analyzed:', jsonText.substring(0, 500));
       }
       
-      console.warn('Could not parse JSON from response, using fallback');
+      console.warn('⚠️ Could not parse JSON from response, using fallback');
       // Fallback if parsing fails
       return [{
         name: 'Custom Recipe',
