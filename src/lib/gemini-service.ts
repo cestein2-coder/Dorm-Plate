@@ -12,6 +12,8 @@ if (!apiKey) {
 
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
+// Last updated: Using gemini-2.5-flash model for v1beta API compatibility
+
 // ==============================================
 // SMART MEAL PLANNER AI
 // ==============================================
@@ -57,7 +59,7 @@ export const mealPlannerAI = {
 
     try {
       console.log('🚀 Generating meal ideas with Gemini for ingredients:', ingredients);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       console.log('📦 Model created:', model);
       
       const prompt = `You are a creative chef and college meal planning assistant. I have these ingredients available: ${ingredients.join(', ')}.
@@ -176,7 +178,7 @@ Be creative! Think like a real chef, not just someone listing ingredients.`;
 
     try {
       console.log('Analyzing fridge photo with Gemini Vision');
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       
       const prompt = `Analyze this photo of a refrigerator or food items. List all the visible food ingredients you can identify. 
 Return ONLY a comma-separated list of ingredients, nothing else. Example: "milk, eggs, cheese, tomatoes, chicken"`;
@@ -238,7 +240,7 @@ export const fridgeAlertAI = {
 
     try {
       console.log('Generating recipe suggestions for expiring items:', expiringItems);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       
       const itemsList = expiringItems
         .map(item => `${item.name} (expires in ${item.daysUntilExpiry} days)`)
@@ -320,7 +322,7 @@ Only respond with the JSON array.`;
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       
       const prompt = `Create a friendly, helpful reminder message for a college student about their ${itemName} that expires in ${daysUntilExpiry} days. 
 Keep it under 30 words, casual tone, and include a quick suggestion or tip. Just return the message text, nothing else.`;
@@ -363,7 +365,7 @@ export const wasteReductionAI = {
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       
       const prompt = `You are a sustainability coach for college students. Based on this data:
 - Items saved from waste: ${wasteData.itemsWasted}
@@ -437,7 +439,7 @@ export const communityAI = {
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       
       const prefText = userPreferences?.length 
         ? `User preferences: ${userPreferences.join(', ')}` 
@@ -529,7 +531,7 @@ export const diningSyncAI = {
     }
 
     try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       
       const prompt = `You are a college meal plan advisor. Analyze this data:
 - Dining dollars remaining: $${data.diningDollars}
