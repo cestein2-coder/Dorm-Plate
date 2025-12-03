@@ -789,20 +789,36 @@ export const communityHelpers = {
    * Fetch all community posts with user information and engagement status
    */
   async getAllPosts(userId?: string) {
+    console.log('📡 communityHelpers.getAllPosts called with userId:', userId);
+    
     // First get all posts
     const { data: posts, error } = await supabase
       .from('community_posts')
       .select('*')
       .order('created_at', { ascending: false });
     
-    if (error || !posts) return { data: null, error };
+    console.log('📡 Posts query result:', { postsCount: posts?.length, error });
+    
+    if (error || !posts) {
+      console.error('📡 Error fetching posts:', error);
+      return { data: null, error };
+    }
+    
+    if (posts.length === 0) {
+      console.log('📡 No posts found, returning empty array');
+      return { data: [], error: null };
+    }
     
     // Get user profiles separately to avoid FK constraint issues
     const userIds = [...new Set(posts.map(p => p.user_id))];
+    console.log('📡 Fetching profiles for user IDs:', userIds);
+    
     const { data: profiles } = await supabase
       .from('student_profiles')
       .select('id, first_name, last_name, university')
       .in('id', userIds);
+    
+    console.log('📡 Profiles fetched:', profiles?.length || 0);
     
     const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
