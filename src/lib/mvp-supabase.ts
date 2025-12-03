@@ -705,17 +705,43 @@ export const fridgeItemHelpers = {
     return { data, error };
   },
 
-  async getFridgeItems() {
-    const { user } = await authHelpers.getCurrentUser();
-    if (!user) return { error: new Error('User not authenticated') };
+  async getFridgeItems(userId?: string) {
+    console.log('📦 getFridgeItems START, userId:', userId);
+    
+    // If no userId provided, try to get current user (may hang in browser)
+    if (!userId) {
+      const { user } = await authHelpers.getCurrentUser();
+      if (!user) return { error: new Error('User not authenticated') };
+      userId = user.id;
+    }
 
-    const { data, error } = await supabase
-      .from('fridge_items')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('expiration_date', { ascending: true });
-
-    return { data, error };
+    // WORKAROUND: Direct fetch to bypass hanging Supabase client issue in browser
+    try {
+      console.log('📦 Fetching fridge items for user:', userId);
+      const response = await fetch(
+        `${supabaseUrl}/rest/v1/fridge_items?user_id=eq.${userId}&order=expiration_date.asc&select=*`,
+        {
+          headers: {
+            'apikey': supabaseAnonKey,
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+          }
+        }
+      );
+      
+      console.log('📦 Response:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        return { data: null, error: new Error(`HTTP ${response.status}: ${errorText}`) };
+      }
+      
+      const data = await response.json();
+      console.log('📦 Got items:', data?.length || 0);
+      return { data, error: null };
+    } catch (err) {
+      console.error('📦 Error:', err);
+      return { data: null, error: err as any };
+    }
   },
 
   async getExpiringSoon(daysAhead: number = 3) {
