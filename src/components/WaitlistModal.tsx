@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, Building } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/mvp-supabase';
 
 interface WaitlistModalProps {
   isOpen: boolean;

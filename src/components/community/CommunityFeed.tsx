@@ -47,7 +47,7 @@ const CommunityFeed: React.FC<CommunityFeedProps> = ({ onCreatePost }) => {
   useEffect(() => {
     loadPosts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, []);
 
   const handleLike = async (postId: string, isCurrentlyLiked: boolean) => {
     if (!user) {
