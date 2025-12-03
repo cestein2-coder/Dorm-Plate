@@ -273,6 +273,47 @@ export interface WasteLog extends BaseEntity {
   logged_at?: string;
 }
 
+// ==============================================
+// COMMUNITY POSTS
+// ==============================================
+
+export interface CommunityPost extends BaseEntity {
+  user_id: string;
+  title: string;
+  description?: string;
+  ingredients: string[];
+  prep_time?: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  image_url?: string;
+  likes_count: number;
+  saves_count: number;
+  
+  // Joined data (populated when fetching)
+  user_email?: string;
+  user_name?: string;
+  is_liked_by_user?: boolean;
+  is_saved_by_user?: boolean;
+}
+
+export interface CreateCommunityPostRequest {
+  title: string;
+  description?: string;
+  ingredients: string[];
+  prep_time?: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  image_url?: string;
+}
+
+export interface CommunityPostLike extends BaseEntity {
+  post_id: string;
+  user_id: string;
+}
+
+export interface CommunityPostSave extends BaseEntity {
+  post_id: string;
+  user_id: string;
+}
+
 
 
 

@@ -780,5 +780,215 @@ export const fridgeItemHelpers = {
   }
 };
 
+// ==============================================
+// COMMUNITY POST HELPERS
+// ==============================================
+
+export const communityHelpers = {
+  /**
+   * Fetch all community posts with user information and engagement status
+   */
+  async getAllPosts(userId?: string) {
+    let query = supabase
+      .from('community_posts')
+      .select(`
+        *,
+        student_profiles!community_posts_user_id_fkey (
+          first_name,
+          last_name,
+          university
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    const { data: posts, error } = await query;
+    
+    if (error || !posts) return { data: null, error };
+
+    // If user is logged in, check which posts they've liked/saved
+    if (userId) {
+      const { data: likes } = await supabase
+        .from('community_post_likes')
+        .select('post_id')
+        .eq('user_id', userId);
+      
+      const { data: saves } = await supabase
+        .from('community_post_saves')
+        .select('post_id')
+        .eq('user_id', userId);
+
+      const likedPostIds = new Set(likes?.map(l => l.post_id) || []);
+      const savedPostIds = new Set(saves?.map(s => s.post_id) || []);
+
+      return {
+        data: posts.map(post => ({
+          ...post,
+          user_name: post.student_profiles?.first_name 
+            ? `${post.student_profiles.first_name} ${post.student_profiles.last_name?.charAt(0)}.`
+            : 'Anonymous',
+          user_university: post.student_profiles?.university,
+          is_liked_by_user: likedPostIds.has(post.id),
+          is_saved_by_user: savedPostIds.has(post.id),
+        })),
+        error: null
+      };
+    }
+
+    return {
+      data: posts.map(post => ({
+        ...post,
+        user_name: post.student_profiles?.first_name 
+          ? `${post.student_profiles.first_name} ${post.student_profiles.last_name?.charAt(0)}.`
+          : 'Anonymous',
+        user_university: post.student_profiles?.university,
+        is_liked_by_user: false,
+        is_saved_by_user: false,
+      })),
+      error: null
+    };
+  },
+
+  /**
+   * Create a new community post
+   */
+  async createPost(postData: {
+    title: string;
+    description?: string;
+    ingredients: string[];
+    prep_time?: string;
+    difficulty?: 'easy' | 'medium' | 'hard';
+    image_url?: string;
+  }) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { data: null, error: new Error('Must be logged in to create post') };
+
+    const { data, error } = await supabase
+      .from('community_posts')
+      .insert({
+        user_id: user.id,
+        ...postData,
+      })
+      .select()
+      .single();
+
+    return { data, error };
+  },
+
+  /**
+   * Like a post
+   */
+  async likePost(postId: string) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { data: null, error: new Error('Must be logged in to like') };
+
+    const { data, error } = await supabase
+      .from('community_post_likes')
+      .insert({
+        post_id: postId,
+        user_id: user.id,
+      })
+      .select()
+      .single();
+
+    return { data, error };
+  },
+
+  /**
+   * Unlike a post
+   */
+  async unlikePost(postId: string) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('Must be logged in to unlike') };
+
+    const { error } = await supabase
+      .from('community_post_likes')
+      .delete()
+      .eq('post_id', postId)
+      .eq('user_id', user.id);
+
+    return { error };
+  },
+
+  /**
+   * Save a post
+   */
+  async savePost(postId: string) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { data: null, error: new Error('Must be logged in to save') };
+
+    const { data, error } = await supabase
+      .from('community_post_saves')
+      .insert({
+        post_id: postId,
+        user_id: user.id,
+      })
+      .select()
+      .single();
+
+    return { data, error };
+  },
+
+  /**
+   * Unsave a post
+   */
+  async unsavePost(postId: string) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('Must be logged in to unsave') };
+
+    const { error } = await supabase
+      .from('community_post_saves')
+      .delete()
+      .eq('post_id', postId)
+      .eq('user_id', user.id);
+
+    return { error };
+  },
+
+  /**
+   * Get user's saved posts
+   */
+  async getSavedPosts() {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { data: null, error: new Error('Must be logged in') };
+
+    const { data, error } = await supabase
+      .from('community_post_saves')
+      .select(`
+        post_id,
+        community_posts (
+          *,
+          student_profiles!community_posts_user_id_fkey (
+            first_name,
+            last_name,
+            university
+          )
+        )
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    return { data, error };
+  },
+
+  /**
+   * Delete a post (only post owner can delete)
+   */
+  async deletePost(postId: string) {
+    const { user } = await authHelpers.getCurrentUser();
+    if (!user) return { error: new Error('Must be logged in') };
+
+    const { error } = await supabase
+      .from('community_posts')
+      .delete()
+      .eq('id', postId)
+      .eq('user_id', user.id);
+
+    return { error };
+  }
+};
+
+
+
+
 
 

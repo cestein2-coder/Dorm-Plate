@@ -7,6 +7,8 @@ import { dashboardHelpers } from '../lib/mvp-supabase';
 import { useAuth } from './auth/AuthProvider';
 import FridgeTracker from './fridge/FridgeTracker';
 import SmartMealPlanner from './meal-planner/SmartMealPlanner';
+import CommunityFeed from './community/CommunityFeed';
+import CreatePostModal from './community/CreatePostModal';
 
 type DashboardView = 'home' | 'meal-planner' | 'fridge' | 'dining-sync' | 'waste-dashboard' | 'community';
 
@@ -24,8 +26,8 @@ const Dashboard: React.FC = () => {
   const [selectedGoal, setSelectedGoal] = useState<'waste' | 'savings'>('waste');
   
   // Interactive states for Community
-  const [likedMeals, setLikedMeals] = useState<Set<number>>(new Set());
-  const [savedMeals, setSavedMeals] = useState<Set<number>>(new Set());
+  const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
+  const [communityRefreshKey, setCommunityRefreshKey] = useState(0);
   
   // Interactive states for Achievements
   const [selectedAchievement, setSelectedAchievement] = useState<number | null>(null);
@@ -599,105 +601,23 @@ const Dashboard: React.FC = () => {
 
           {/* COMMUNITY PICKS VIEW */}
           {currentView === 'community' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-3xl font-bold text-food-brown">Community Picks</h2>
-                <p className="text-gray-600 mt-1">Trending meals from students at {profile?.university || 'your campus'}</p>
-              </div>
-
-              {/* Trending Meals */}
-              <div className="grid md:grid-cols-2 gap-6">
-                {[
-                  { meal: 'Late Night Ramen Bowl', user: 'Sarah K.', likes: 45, ingredients: 'Ramen, eggs, veggies', time: '10 mins', emoji: '🍜' },
-                  { meal: 'Budget Chicken Tacos', user: 'Mike T.', likes: 38, ingredients: 'Chicken, tortillas, salsa', time: '15 mins', emoji: '🌮' },
-                  { meal: 'Quick Pasta Primavera', user: 'Emily R.', likes: 52, ingredients: 'Pasta, mixed veggies, cheese', time: '12 mins', emoji: '🍝' },
-                  { meal: 'Protein Power Bowl', user: 'Alex M.', likes: 41, ingredients: 'Rice, beans, avocado', time: '8 mins', emoji: '🥗' }
-                ].map((item, idx) => {
-                  const isLiked = likedMeals.has(idx);
-                  const isSaved = savedMeals.has(idx);
-                  const displayLikes = item.likes + (isLiked ? 1 : 0);
-                  
-                  return (
-                    <div key={idx} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-green-100 rounded-full flex items-center justify-center text-2xl">
-                            {item.emoji}
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-food-brown">{item.meal}</h3>
-                            <p className="text-sm text-gray-600">by {item.user}</p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => {
-                            const newLiked = new Set(likedMeals);
-                            if (isLiked) {
-                              newLiked.delete(idx);
-                            } else {
-                              newLiked.add(idx);
-                            }
-                            setLikedMeals(newLiked);
-                          }}
-                          className={`transition-all ${
-                            isLiked ? 'text-red-500 scale-110' : 'text-gray-400 hover:text-red-500'
-                          }`}
-                        >
-                          {isLiked ? '❤️' : '🤍'} {displayLikes}
-                        </button>
-                      </div>
-                      <div className="space-y-2 mb-4">
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Ingredients:</span> {item.ingredients}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <span className="font-medium">Time:</span> {item.time}
-                        </p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button className="flex-1 bg-food-orange text-white py-2 rounded-lg font-medium hover:bg-food-orange-dark transition-colors">
-                          View Recipe
-                        </button>
-                        <button
-                          onClick={() => {
-                            const newSaved = new Set(savedMeals);
-                            if (isSaved) {
-                              newSaved.delete(idx);
-                            } else {
-                              newSaved.add(idx);
-                            }
-                            setSavedMeals(newSaved);
-                          }}
-                          className={`px-4 border-2 rounded-lg font-medium transition-colors ${
-                            isSaved
-                              ? 'border-food-green bg-food-green text-white'
-                              : 'border-food-orange text-food-orange hover:bg-food-orange hover:text-white'
-                          }`}
-                        >
-                          {isSaved ? '✓ Saved' : 'Save'}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Share Your Meal CTA */}
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-8 text-center">
-                <Users className="h-12 w-12 text-purple-500 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-food-brown mb-2">Share Your Creation!</h3>
-                <p className="text-gray-600 mb-6">
-                  Made something delicious? Share it with the community and inspire other students!
-                </p>
-                <button className="bg-purple-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-purple-600 transition-colors">
-                  📸 Upload Your Meal
-                </button>
-              </div>
-            </div>
+            <CommunityFeed 
+              key={communityRefreshKey}
+              onCreatePost={() => setIsCreatePostModalOpen(true)} 
+            />
           )}
 
         </div>
       </div>
+      
+      {/* Create Post Modal */}
+      <CreatePostModal
+        isOpen={isCreatePostModalOpen}
+        onClose={() => setIsCreatePostModalOpen(false)}
+        onPostCreated={() => {
+          setCommunityRefreshKey(prev => prev + 1);
+        }}
+      />
     </div>
   );
 };
