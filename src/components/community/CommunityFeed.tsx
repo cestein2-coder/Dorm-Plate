@@ -15,10 +15,6 @@ const CommunityFeed: React.FC<CommunityFeedProps> = ({ onCreatePost }) => {
   const [error, setError] = useState<string>('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadPosts();
-  }, [user]);
-
   const loadPosts = async () => {
     console.log('🔍 CommunityFeed: Starting to load posts...');
     console.log('🔍 User ID:', user?.id);
@@ -55,6 +51,12 @@ const CommunityFeed: React.FC<CommunityFeedProps> = ({ onCreatePost }) => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    console.log('🔍 CommunityFeed useEffect triggered, user:', user?.id);
+    loadPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleLike = async (postId: string, isCurrentlyLiked: boolean) => {
     if (!user) {
