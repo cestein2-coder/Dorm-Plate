@@ -503,32 +503,13 @@ export const dashboardHelpers = {
     const { user } = await authHelpers.getCurrentUser();
     if (!user) return { error: new Error('User not authenticated') };
 
-    // Get recent orders
-    const { data: recentOrders } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        restaurant:restaurants (name, image_url)
-      `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(5);
-
-    // Get order stats
-    const { data: orderStats } = await supabase
-      .from('orders')
-      .select('total')
-      .eq('user_id', user.id)
-      .eq('status', 'delivered');
-
-    const totalOrders = orderStats?.length || 0;
-    const totalSpent = orderStats?.reduce((sum, order) => sum + order.total, 0) || 0;
-
+    // TODO: Orders table not yet implemented
+    // Returning mock data for now
     return {
       data: {
-        recent_orders: recentOrders || [],
-        total_orders: totalOrders,
-        total_spent: totalSpent
+        recent_orders: [],
+        total_orders: 0,
+        total_spent: 0
       },
       error: null
     };
@@ -789,36 +770,27 @@ export const communityHelpers = {
    * Fetch all community posts with user information and engagement status
    */
   async getAllPosts(userId?: string) {
-    console.log('📡 communityHelpers.getAllPosts called with userId:', userId);
-    
     // First get all posts
     const { data: posts, error } = await supabase
       .from('community_posts')
       .select('*')
       .order('created_at', { ascending: false });
     
-    console.log('📡 Posts query result:', { postsCount: posts?.length, error });
-    
     if (error || !posts) {
-      console.error('📡 Error fetching posts:', error);
       return { data: null, error };
     }
     
     if (posts.length === 0) {
-      console.log('📡 No posts found, returning empty array');
       return { data: [], error: null };
     }
     
     // Get user profiles separately to avoid FK constraint issues
     const userIds = [...new Set(posts.map(p => p.user_id))];
-    console.log('📡 Fetching profiles for user IDs:', userIds);
     
     const { data: profiles } = await supabase
       .from('student_profiles')
       .select('id, first_name, last_name, university')
       .in('id', userIds);
-    
-    console.log('📡 Profiles fetched:', profiles?.length || 0);
     
     const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
 

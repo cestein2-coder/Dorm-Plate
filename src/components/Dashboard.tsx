@@ -27,7 +27,7 @@ const Dashboard: React.FC = () => {
   
   // Interactive states for Community
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
-  const [communityRefreshKey, setCommunityRefreshKey] = useState(0);
+  const [refreshCommunity, setRefreshCommunity] = useState(0);
   
   // Interactive states for Achievements
   const [selectedAchievement, setSelectedAchievement] = useState<number | null>(null);
@@ -602,7 +602,7 @@ const Dashboard: React.FC = () => {
           {/* COMMUNITY PICKS VIEW */}
           {currentView === 'community' && (
             <CommunityFeed 
-              key={communityRefreshKey}
+              key={refreshCommunity}
               onCreatePost={() => setIsCreatePostModalOpen(true)} 
             />
           )}
@@ -615,7 +615,8 @@ const Dashboard: React.FC = () => {
         isOpen={isCreatePostModalOpen}
         onClose={() => setIsCreatePostModalOpen(false)}
         onPostCreated={() => {
-          setCommunityRefreshKey(prev => prev + 1);
+          setIsCreatePostModalOpen(false);
+          setRefreshCommunity(prev => prev + 1);
         }}
       />
     </div>

@@ -16,19 +16,14 @@ const CommunityFeed: React.FC<CommunityFeedProps> = ({ onCreatePost }) => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const loadPosts = async () => {
-    console.log('🔍 CommunityFeed: Starting to load posts...');
-    console.log('🔍 User ID:', user?.id);
     setLoading(true);
     setError('');
     
     try {
       const { data, error: fetchError } = await communityHelpers.getAllPosts(user?.id);
       
-      console.log('🔍 Query result - data:', data);
-      console.log('🔍 Query result - error:', fetchError);
-      
       if (fetchError) {
-        console.error('❌ Error loading posts:', fetchError);
+        console.error('Error loading posts:', fetchError);
         
         // Check if it's a table doesn't exist error
         if (fetchError.message?.includes('relation') && fetchError.message?.includes('does not exist')) {
@@ -37,26 +32,22 @@ const CommunityFeed: React.FC<CommunityFeedProps> = ({ onCreatePost }) => {
           setError(`Failed to load community posts: ${fetchError.message || 'Unknown error'}`);
         }
       } else if (data) {
-        console.log('✅ Posts loaded successfully:', data.length, 'posts');
         setPosts(data as any);
       } else {
-        console.log('⚠️ No data and no error - unexpected state');
         setError('No data returned from server');
       }
     } catch (err) {
-      console.error('❌ Unexpected error:', err);
+      console.error('Unexpected error:', err);
       setError('An unexpected error occurred. Check console for details.');
     } finally {
-      console.log('🔍 Loading complete, setting loading to false');
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    console.log('🔍 CommunityFeed useEffect triggered, user:', user?.id);
     loadPosts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user?.id]);
 
   const handleLike = async (postId: string, isCurrentlyLiked: boolean) => {
     if (!user) {
