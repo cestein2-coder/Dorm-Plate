@@ -23,16 +23,27 @@ const CommunityFeed: React.FC<CommunityFeedProps> = ({ onCreatePost }) => {
     setLoading(true);
     setError('');
     
-    const { data, error: fetchError } = await communityHelpers.getAllPosts(user?.id);
-    
-    if (fetchError) {
-      setError('Failed to load community posts');
-      console.error('Error loading posts:', fetchError);
-    } else if (data) {
-      setPosts(data as any);
+    try {
+      const { data, error: fetchError } = await communityHelpers.getAllPosts(user?.id);
+      
+      if (fetchError) {
+        console.error('Error loading posts:', fetchError);
+        
+        // Check if it's a table doesn't exist error
+        if (fetchError.message?.includes('relation') && fetchError.message?.includes('does not exist')) {
+          setError('Community feature not yet set up. Please run the database migration first. Check COMMUNITY_FEATURE_GUIDE.md for instructions.');
+        } else {
+          setError(`Failed to load community posts: ${fetchError.message || 'Unknown error'}`);
+        }
+      } else if (data) {
+        setPosts(data as any);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred. Check console for details.');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   const handleLike = async (postId: string, isCurrentlyLiked: boolean) => {
