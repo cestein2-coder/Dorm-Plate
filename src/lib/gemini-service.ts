@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-console.log('🔑 Gemini API Key status:', apiKey ? `Loaded (${apiKey.substring(0, 10)}...)` : 'NOT FOUND');
+console.log('🔑 Gemini API Key status:', apiKey ? 'Loaded ✓' : 'NOT FOUND');
 
 if (!apiKey) {
   console.error('❌ VITE_GEMINI_API_KEY not found. AI features will be limited.');
