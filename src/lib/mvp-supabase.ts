@@ -688,21 +688,46 @@ export const fridgeItemHelpers = {
     purchase_date?: string;
     expiration_date: string;
     notes?: string;
-  }) {
-    const { user } = await authHelpers.getCurrentUser();
-    if (!user) return { error: new Error('User not authenticated') };
+  }, userId?: string, accessToken?: string) {
+    console.log('🍱 createFridgeItem called with userId:', userId);
+    
+    if (!accessToken || !userId) {
+      return { data: null, error: new Error('Must be logged in to create fridge item') };
+    }
 
-    const { data, error } = await supabase
-      .from('fridge_items')
-      .insert({
-        user_id: user.id,
-        ...itemData,
-        is_expired: false
-      })
-      .select()
-      .single();
+    try {
+      console.log('📡 Creating fridge item via fetch API with token...');
+      const response = await fetch(
+        `${supabaseUrl}/rest/v1/fridge_items`,
+        {
+          method: 'POST',
+          headers: {
+            'apikey': supabaseAnonKey,
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            ...itemData,
+            is_expired: false
+          })
+        }
+      );
 
-    return { data, error };
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Create fridge item failed:', response.status, errorText);
+        return { data: null, error: new Error(`Failed to create fridge item: ${response.status}`) };
+      }
+
+      const data = await response.json();
+      console.log('✅ Fridge item created successfully:', data);
+      return { data: Array.isArray(data) ? data[0] : data, error: null };
+    } catch (err) {
+      console.error('❌ Create fridge item error:', err);
+      return { data: null, error: err as any };
+    }
   },
 
   async getFridgeItems(userId?: string) {

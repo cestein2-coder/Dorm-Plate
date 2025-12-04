@@ -18,7 +18,7 @@ interface FridgeItem {
 
 export default function FridgeTracker() {
   console.log('[FridgeTracker] Component mounting...');
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [items, setItems] = useState<FridgeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -250,7 +250,7 @@ export default function FridgeTracker() {
         quantity: newItem.quantity || undefined,
         expiration_date: newItem.expiration_date,
         notes: newItem.notes || undefined
-      });
+      }, user?.id, session?.access_token);
 
       console.log('[FridgeTracker] Waiting for Promise.race...');
       const { data, error } = await Promise.race([createPromise, timeoutPromise]) as any;
