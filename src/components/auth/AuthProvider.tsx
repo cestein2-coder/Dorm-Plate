@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   profile: StudentProfile | null;
   loading: boolean;
+  session: any;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -28,6 +29,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const refreshProfile = async () => {
@@ -66,6 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
+      setSession(session);
       
       if (session?.user) {
         const { profile: userProfile } = await authHelpers.getCurrentProfile();
@@ -81,6 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setUser(session?.user ?? null);
+        setSession(session);
         
         if (session?.user) {
           const { profile: userProfile } = await authHelpers.getCurrentProfile();
@@ -99,6 +103,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value = {
     user,
     profile,
+    session,
     loading,
     signOut,
     refreshProfile

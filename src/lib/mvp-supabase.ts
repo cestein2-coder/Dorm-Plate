@@ -892,28 +892,22 @@ export const communityHelpers = {
     prep_time?: string;
     difficulty?: 'easy' | 'medium' | 'hard';
     image_url?: string;
-  }, userId?: string) {
+  }, userId?: string, accessToken?: string) {
     console.log('🔍 createPost called with userId:', userId);
     
-    // Get the session token for authenticated requests
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return { data: null, error: new Error('Must be logged in to create post') };
-    }
-
-    if (!userId) {
-      userId = session.user.id;
+    if (!accessToken) {
+      return { data: null, error: new Error('Must be logged in to create post - no access token') };
     }
 
     try {
-      console.log('📡 Creating post via fetch API...');
+      console.log('📡 Creating post via fetch API with token...');
       const response = await fetch(
         `${supabaseUrl}/rest/v1/community_posts`,
         {
           method: 'POST',
           headers: {
             'apikey': supabaseAnonKey,
-            'Authorization': `Bearer ${session.access_token}`,
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
             'Prefer': 'return=representation'
           },

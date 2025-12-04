@@ -10,7 +10,7 @@ interface CreatePostModalProps {
 }
 
 const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onPostCreated }) => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [ingredients, setIngredients] = useState<string[]>([]);
@@ -56,7 +56,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onPo
         prep_time: prepTime.trim() || undefined,
         difficulty,
         image_url: imageUrl.trim() || undefined,
-      }, user?.id);
+      }, user?.id, session?.access_token);
 
       if (createError) {
         throw createError;
