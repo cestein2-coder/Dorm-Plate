@@ -895,10 +895,14 @@ export const communityHelpers = {
   }, userId?: string) {
     console.log('🔍 createPost called with userId:', userId);
     
+    // Get the session token for authenticated requests
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return { data: null, error: new Error('Must be logged in to create post') };
+    }
+
     if (!userId) {
-      const { user } = await authHelpers.getCurrentUser();
-      if (!user) return { data: null, error: new Error('Must be logged in to create post') };
-      userId = user.id;
+      userId = session.user.id;
     }
 
     try {
@@ -909,7 +913,7 @@ export const communityHelpers = {
           method: 'POST',
           headers: {
             'apikey': supabaseAnonKey,
-            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Authorization': `Bearer ${session.access_token}`,
             'Content-Type': 'application/json',
             'Prefer': 'return=representation'
           },
