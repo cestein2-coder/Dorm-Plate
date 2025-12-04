@@ -892,20 +892,47 @@ export const communityHelpers = {
     prep_time?: string;
     difficulty?: 'easy' | 'medium' | 'hard';
     image_url?: string;
-  }) {
-    const { user } = await authHelpers.getCurrentUser();
-    if (!user) return { data: null, error: new Error('Must be logged in to create post') };
+  }, userId?: string) {
+    console.log('🔍 createPost called with userId:', userId);
+    
+    if (!userId) {
+      const { user } = await authHelpers.getCurrentUser();
+      if (!user) return { data: null, error: new Error('Must be logged in to create post') };
+      userId = user.id;
+    }
 
-    const { data, error } = await supabase
-      .from('community_posts')
-      .insert({
-        user_id: user.id,
-        ...postData,
-      })
-      .select()
-      .single();
+    try {
+      console.log('📡 Creating post via fetch API...');
+      const response = await fetch(
+        `${supabaseUrl}/rest/v1/community_posts`,
+        {
+          method: 'POST',
+          headers: {
+            'apikey': supabaseAnonKey,
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            ...postData,
+          })
+        }
+      );
 
-    return { data, error };
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Create post failed:', response.status, errorText);
+        return { data: null, error: new Error(`Failed to create post: ${response.status}`) };
+      }
+
+      const data = await response.json();
+      console.log('✅ Post created successfully:', data);
+      return { data: Array.isArray(data) ? data[0] : data, error: null };
+    } catch (err) {
+      console.error('❌ Create post error:', err);
+      return { data: null, error: err as any };
+    }
   },
 
   /**

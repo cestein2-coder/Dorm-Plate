@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Loader2, Plus, Trash2, Camera } from 'lucide-react';
 import { communityHelpers } from '../../lib/mvp-supabase';
+import { useAuth } from '../auth/AuthProvider';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface CreatePostModalProps {
 }
 
 const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onPostCreated }) => {
+  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [ingredients, setIngredients] = useState<string[]>([]);
@@ -54,7 +56,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose, onPo
         prep_time: prepTime.trim() || undefined,
         difficulty,
         image_url: imageUrl.trim() || undefined,
-      });
+      }, user?.id);
 
       if (createError) {
         throw createError;
