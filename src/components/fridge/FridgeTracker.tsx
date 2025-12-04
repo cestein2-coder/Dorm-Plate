@@ -165,7 +165,7 @@ export default function FridgeTracker() {
     });
     
     try {
-      const loadPromise = fridgeItemHelpers.getFridgeItems(user?.id);
+      const loadPromise = fridgeItemHelpers.getFridgeItems(user?.id, session?.access_token);
       const { data, error } = await Promise.race([loadPromise, timeoutPromise]) as any;
       
       if (error) {

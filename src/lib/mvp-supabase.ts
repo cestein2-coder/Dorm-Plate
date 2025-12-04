@@ -730,14 +730,11 @@ export const fridgeItemHelpers = {
     }
   },
 
-  async getFridgeItems(userId?: string) {
+  async getFridgeItems(userId?: string, accessToken?: string) {
     console.log('📦 getFridgeItems START, userId:', userId);
     
-    // If no userId provided, try to get current user (may hang in browser)
-    if (!userId) {
-      const { user } = await authHelpers.getCurrentUser();
-      if (!user) return { error: new Error('User not authenticated') };
-      userId = user.id;
+    if (!userId || !accessToken) {
+      return { data: [], error: new Error('User not authenticated - missing userId or token') };
     }
 
     // WORKAROUND: Direct fetch to bypass hanging Supabase client issue in browser
@@ -748,7 +745,7 @@ export const fridgeItemHelpers = {
         {
           headers: {
             'apikey': supabaseAnonKey,
-            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Authorization': `Bearer ${accessToken}`,
           }
         }
       );
